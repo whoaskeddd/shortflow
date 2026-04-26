@@ -1,9 +1,13 @@
+import os
 from fastapi.testclient import TestClient
 from uuid import uuid4
 
+os.environ["APP_DATABASE_URL"] = "sqlite:///./test_shortflow.db"
+
+from app.db import Base, engine
 from app.main import app
 
-
+Base.metadata.create_all(bind=engine)
 client = TestClient(app)
 
 

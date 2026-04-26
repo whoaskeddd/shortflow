@@ -1,12 +1,15 @@
 # ShortFlow
 
+## Стек проекта
+
+- Mobile: React Native + Expo + TypeScript + React Navigation + Zustand
+- Backend: Python + FastAPI + SQLAlchemy
+- Data: PostgreSQL + Redis
+- Storage: MinIO / S3-compatible storage
+- Infra: Docker Compose
+- Tooling: ESLint + TypeScript + Pytest + Ruff
+
 ShortFlow — mobile-first MVP приложения коротких вертикальных видео в духе TikTok.
-
-Стек:
-
-- `apps/api` — FastAPI backend
-- `apps/mobile` — React Native / Expo mobile client
-- `docker-compose.yml` — локальная инфраструктура для backend
 
 В этой версии проверка проекта ориентирована на Android Studio и Android Emulator.
 

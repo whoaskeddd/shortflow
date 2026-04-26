@@ -24,3 +24,4 @@ Thumbs.db
 # Uploads
 apps/api/data/
 tmp/
+apps/api/test_shortflow.db
