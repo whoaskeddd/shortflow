@@ -1,0 +1,13 @@
+{
+  "name": "shortflow",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/mobile"
+  ],
+  "scripts": {
+    "lint": "npm run lint --workspace @shortflow/mobile",
+    "typecheck": "npm run typecheck --workspace @shortflow/mobile",
+    "validate": "npm run lint && npm run typecheck"
+  }
+}

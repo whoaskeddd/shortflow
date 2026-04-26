@@ -1,0 +1,26 @@
+# Node
+node_modules/
+.expo/
+dist/
+coverage/
+
+# Python
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+
+# Env
+.env
+.env.local
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Uploads
+apps/api/data/
+tmp/
