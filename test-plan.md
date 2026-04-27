@@ -5,10 +5,10 @@
 - Plan file: `C:\develop\shortflow\plan.md`
 - Status file: `C:\develop\shortflow\status.md`
 - Repo context: `C:\develop\shortflow`
-- Last updated: 2026-04-26
+- Last updated: 2026-04-27
 
 ## Validation Scope
-- In scope: backend auth/profile/video/feed/social/search/notification flows, mobile navigation/state/UI contracts, DX/infra docs and compose.
+- In scope: backend auth/profile/video/feed/social/search/notification flows, mobile navigation/state/UI contracts, mobile safe-area/layout polish, local video picker/upload flow, DX/infra docs and compose.
 - Out of scope: AI moderation pipeline, live streaming, direct messages, duet/stitch, monetization, advanced ML ranking.
 
 ## Environment / Fixtures

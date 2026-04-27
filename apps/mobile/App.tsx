@@ -3,11 +3,14 @@ import "react-native-gesture-handler";
 import React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StyleSheet, Text, View } from "react-native";
+import { enableScreens } from "react-native-screens";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { ThemeProvider, useAppTheme } from "./src/theme/ThemeProvider";
+
+enableScreens(false);
 
 function AppShell() {
   const { colorScheme } = useAppTheme();

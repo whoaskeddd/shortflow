@@ -15,7 +15,8 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#0A84FF"
-      }
+      },
+      "package": "com.anonymous.shortflow"
     }
   }
 }

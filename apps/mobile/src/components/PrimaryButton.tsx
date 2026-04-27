@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Animated, Pressable, StyleSheet, Text } from "react-native";
 
 import { useAppTheme } from "@/theme/ThemeProvider";
 
@@ -13,19 +13,23 @@ export function PrimaryButton({
   const { colors, radius, spacing } = useAppTheme();
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.button,
-        {
-          backgroundColor: colors.primary,
-          borderRadius: radius.md,
-          paddingVertical: spacing.sm,
-          opacity: pressed ? 0.86 : 1
-        }
-      ]}
-    >
-      <Text style={styles.label}>{title}</Text>
+    <Pressable onPress={onPress}>
+      {({ pressed }) => (
+        <Animated.View
+          style={[
+            styles.button,
+            {
+              backgroundColor: colors.primary,
+              borderRadius: radius.md,
+              paddingVertical: spacing.sm,
+              opacity: pressed ? 0.94 : 1,
+              transform: [{ scale: pressed ? 0.985 : 1 }]
+            }
+          ]}
+        >
+          <Text style={styles.label}>{title}</Text>
+        </Animated.View>
+      )}
     </Pressable>
   );
 }

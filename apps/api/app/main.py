@@ -209,7 +209,7 @@ def get_feed(limit: int = Query(20, le=50), db: Session = Depends(get_db)) -> li
         select(Video)
         .options(joinedload(Video.author))
         .where(Video.content_status == ContentStatus.approved)
-        .order_by(desc(Video.likes_count + Video.comments_count + Video.views_count), desc(Video.created_at))
+        .order_by(desc(Video.created_at))
         .limit(limit)
     )
     return [video_to_schema(video) for video in db.scalars(query).unique().all()]

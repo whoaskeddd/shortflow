@@ -1,12 +1,25 @@
 import React from "react";
-import { SafeAreaView, StyleSheet, ViewStyle } from "react-native";
+import { StyleSheet, ViewStyle } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAppTheme } from "@/theme/ThemeProvider";
 
-export function Screen({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
+export function Screen({
+  children,
+  style,
+  edges = ["top", "left", "right"]
+}: {
+  children: React.ReactNode;
+  style?: ViewStyle;
+  edges?: ("top" | "right" | "bottom" | "left")[];
+}) {
   const { colors } = useAppTheme();
 
-  return <SafeAreaView style={[styles.base, { backgroundColor: colors.background }, style]}>{children}</SafeAreaView>;
+  return (
+    <SafeAreaView edges={edges} style={[styles.base, { backgroundColor: colors.background }, style]}>
+      {children}
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({

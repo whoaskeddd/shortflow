@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { FlatList, StyleSheet, Text, TextInput, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiUser, ApiVideo, apiRequest } from "@/api/client";
 import { Screen } from "@/components/Screen";
+import { getScreenBottomPadding } from "@/navigation/tabBarLayout";
 import { useAppTheme } from "@/theme/ThemeProvider";
 
 type SearchResponse = {
@@ -12,6 +14,7 @@ type SearchResponse = {
 
 export function SearchScreen() {
   const { colors, spacing, radius } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResponse>({ users: [], videos: [] });
 
@@ -26,18 +29,36 @@ export function SearchScreen() {
   };
 
   return (
-    <Screen>
-      <View style={{ padding: spacing.md, gap: spacing.md }}>
-        <Text style={[styles.heading, { color: colors.text }]}>Поиск авторов, роликов и хэштегов</Text>
+    <Screen edges={["top", "left", "right", "bottom"]}>
+      <View
+        style={{
+          flex: 1,
+          padding: spacing.md,
+          gap: spacing.md,
+          paddingBottom: getScreenBottomPadding(insets.bottom)
+        }}
+      >
+        <Text style={[styles.heading, { color: colors.text }]}>
+          Поиск авторов, роликов и хэштегов
+        </Text>
         <TextInput
           value={query}
           onChangeText={submit}
           placeholder="Например: танцы, travel, @creator"
           placeholderTextColor={colors.textSecondary}
-          style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderRadius: radius.md, borderColor: colors.border }]}
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.surface,
+              color: colors.text,
+              borderRadius: radius.md,
+              borderColor: colors.border
+            }
+          ]}
         />
         <FlatList
           data={[...results.users, ...results.videos]}
+          contentContainerStyle={{ paddingBottom: spacing.md }}
           keyExtractor={(item) => `${"email" in item ? "user" : "video"}-${item.id}`}
           renderItem={({ item }) =>
             "email" in item ? (
@@ -52,7 +73,9 @@ export function SearchScreen() {
               </View>
             )
           }
-          ListEmptyComponent={<Text style={{ color: colors.textSecondary }}>Результаты поиска появятся здесь.</Text>}
+          ListEmptyComponent={
+            <Text style={{ color: colors.textSecondary }}>Результаты поиска появятся здесь.</Text>
+          }
         />
       </View>
     </Screen>

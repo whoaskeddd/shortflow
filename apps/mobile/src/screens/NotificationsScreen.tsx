@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiNotification, apiRequest } from "@/api/client";
 import { Screen } from "@/components/Screen";
+import { getScreenBottomPadding } from "@/navigation/tabBarLayout";
 import { useAuthStore } from "@/store/auth";
 import { useAppTheme } from "@/theme/ThemeProvider";
 
 export function NotificationsScreen() {
   const token = useAuthStore((state) => state.accessToken);
   const { colors, spacing } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const [items, setItems] = useState<ApiNotification[]>([]);
 
   useEffect(() => {
@@ -21,19 +24,30 @@ export function NotificationsScreen() {
   }, [token]);
 
   return (
-    <Screen>
-      <View style={{ flex: 1, padding: spacing.md }}>
+    <Screen edges={["top", "left", "right", "bottom"]}>
+      <View
+        style={{
+          flex: 1,
+          padding: spacing.md,
+          paddingBottom: getScreenBottomPadding(insets.bottom)
+        }}
+      >
         <Text style={[styles.heading, { color: colors.text }]}>Активность</Text>
         <FlatList
           data={items}
+          contentContainerStyle={{ paddingBottom: spacing.md }}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
               <Text style={[styles.message, { color: colors.text }]}>{item.message}</Text>
-              <Text style={{ color: colors.textSecondary }}>{new Date(item.created_at).toLocaleString()}</Text>
+              <Text style={{ color: colors.textSecondary }}>
+                {new Date(item.created_at).toLocaleString()}
+              </Text>
             </View>
           )}
-          ListEmptyComponent={<Text style={{ color: colors.textSecondary }}>Пока нет новых уведомлений.</Text>}
+          ListEmptyComponent={
+            <Text style={{ color: colors.textSecondary }}>Пока нет новых уведомлений.</Text>
+          }
         />
       </View>
     </Screen>

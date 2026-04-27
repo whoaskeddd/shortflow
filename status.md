@@ -1,10 +1,10 @@
 # ShortFlow Status
 
 ## Snapshot
-- Current phase: M5. Validation, docs, and handoff
+- Current phase: M6. Mobile polish: smooth motion, safe areas, local video picker
 - Plan file: `C:\develop\shortflow\plan.md`
 - Status: yellow
-- Last updated: 2026-04-26
+- Last updated: 2026-04-27
 
 ## Done
 - Прочитаны и учтены `tech.md` и исходный `plan.md`.

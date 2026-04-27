@@ -13,7 +13,8 @@ export default [
       parser,
       globals: {
         RequestInit: "readonly",
-        fetch: "readonly"
+        fetch: "readonly",
+        process: "readonly"
       }
     },
     plugins: {

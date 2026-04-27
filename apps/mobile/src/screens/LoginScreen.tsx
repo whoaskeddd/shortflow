@@ -10,14 +10,18 @@ export function LoginScreen({ onRegisterPress }: { onRegisterPress: () => void }
   const { colors, spacing, radius } = useAppTheme();
   const signIn = useAuthStore((state) => state.signIn);
   const loading = useAuthStore((state) => state.loading);
-  const [email, setEmail] = useState("demo@shortflow.app");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const submit = async () => {
     try {
       await signIn(email, password);
     } catch (error) {
-      Alert.alert("Ошибка входа", error instanceof Error ? error.message : "Попробуйте еще раз");
+      const message = error instanceof Error ? error.message : "Попробуйте еще раз";
+      Alert.alert(
+        "Ошибка входа",
+        message === "Invalid credentials" ? "Неверная почта или пароль." : message
+      );
     }
   };
 
@@ -25,7 +29,9 @@ export function LoginScreen({ onRegisterPress }: { onRegisterPress: () => void }
     <Screen>
       <View style={[styles.container, { padding: spacing.lg }]}>
         <Text style={[styles.eyebrow, { color: colors.primary }]}>ShortFlow</Text>
-        <Text style={[styles.title, { color: colors.text }]}>Короткие видео в мобильной ленте.</Text>
+        <Text style={[styles.title, { color: colors.text }]}>
+          Короткие видео в мобильной ленте.
+        </Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           Войдите, чтобы открыть ленту, профиль, активность и инструменты автора.
         </Text>
@@ -34,7 +40,15 @@ export function LoginScreen({ onRegisterPress }: { onRegisterPress: () => void }
           keyboardType="email-address"
           placeholder="Почта"
           placeholderTextColor={colors.textSecondary}
-          style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border, borderRadius: radius.md }]}
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.surface,
+              color: colors.text,
+              borderColor: colors.border,
+              borderRadius: radius.md
+            }
+          ]}
           value={email}
           onChangeText={setEmail}
         />
@@ -42,7 +56,15 @@ export function LoginScreen({ onRegisterPress }: { onRegisterPress: () => void }
           secureTextEntry
           placeholder="Пароль"
           placeholderTextColor={colors.textSecondary}
-          style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border, borderRadius: radius.md }]}
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.surface,
+              color: colors.text,
+              borderColor: colors.border,
+              borderRadius: radius.md
+            }
+          ]}
           value={password}
           onChangeText={setPassword}
         />

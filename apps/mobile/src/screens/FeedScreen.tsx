@@ -1,35 +1,53 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
   Modal,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   TextInput,
-  View
+  View,
+  useWindowDimensions
 } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiComment, ApiVideo, apiRequest } from "@/api/client";
 import { FeedSkeleton } from "@/components/FeedSkeleton";
 import { Screen } from "@/components/Screen";
 import { VideoCard } from "@/components/VideoCard";
+import { getTabBarHeight } from "@/navigation/tabBarLayout";
 import { useAuthStore } from "@/store/auth";
 import { useAppTheme } from "@/theme/ThemeProvider";
 
-type FeedMode = "for_you" | "following";
+type ReactionKind = "like" | "save" | "repost";
 
 export function FeedScreen() {
   const token = useAuthStore((state) => state.accessToken);
   const { colors, spacing, radius } = useAppTheme();
-  const [mode, setMode] = useState<FeedMode>("for_you");
+  const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
+  const { height } = useWindowDimensions();
+  const flatListRef = useRef<FlatList<ApiVideo>>(null);
+  const lastEndRefreshAt = useRef(0);
   const [videos, setVideos] = useState<ApiVideo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [activeVideo, setActiveVideo] = useState<ApiVideo | null>(null);
   const [comments, setComments] = useState<ApiComment[]>([]);
   const [commentText, setCommentText] = useState("");
   const [likedIds, setLikedIds] = useState<Record<number, boolean>>({});
+  const [savedIds, setSavedIds] = useState<Record<number, boolean>>({});
+  const [repostedIds, setRepostedIds] = useState<Record<number, boolean>>({});
+  const [visibleVideoId, setVisibleVideoId] = useState<number | null>(null);
+  const [listHeight, setListHeight] = useState(height);
+
+  const tabBarHeight = getTabBarHeight(insets.bottom);
 
   const updateVideoCounters = (
     videoId: number,
@@ -43,30 +61,82 @@ export function FeedScreen() {
     );
   };
 
-  const loadFeed = async (nextMode: FeedMode = mode) => {
-    setLoading(true);
-    try {
-      const path = nextMode === "for_you" ? "/videos/feed" : "/videos/following";
-      const response = await apiRequest<ApiVideo[]>(path, {}, token);
-      setVideos(response);
-    } catch {
-      setVideos([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loadFeed = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
+      if (silent) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
+      try {
+        const response = await apiRequest<ApiVideo[]>("/videos/feed", {}, token);
+        setVideos(response);
+        setVisibleVideoId((current) => {
+          if (response.length === 0) {
+            return null;
+          }
+
+          if (current && response.some((video) => video.id === current)) {
+            return current;
+          }
+
+          return response[0]?.id ?? null;
+        });
+      } catch {
+        setVideos([]);
+        setVisibleVideoId(null);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [token]
+  );
 
   useEffect(() => {
-    void loadFeed(mode);
-  }, [mode]);
+    if (isFocused) {
+      void loadFeed();
+    } else {
+      setVisibleVideoId(null);
+    }
+  }, [isFocused, loadFeed]);
 
-  const toggle = async (path: string) => {
-    if (!token || videos.length === 0) {
+  const applyReactionState = (
+    videoId: number,
+    nextActive: boolean,
+    currentMap: Record<number, boolean>,
+    setMap: React.Dispatch<React.SetStateAction<Record<number, boolean>>>,
+    counterField: "likes_count" | "saves_count" | "reposts_count"
+  ) => {
+    const previousActive = currentMap[videoId] ?? !nextActive;
+    const delta = nextActive === previousActive ? 0 : nextActive ? 1 : -1;
+
+    setMap((current) => ({ ...current, [videoId]: nextActive }));
+    updateVideoCounters(videoId, (video) => ({
+      ...video,
+      [counterField]: Math.max(0, video[counterField] + delta)
+    }));
+  };
+
+  const toggleReaction = async (
+    videoId: number,
+    kind: ReactionKind,
+    currentMap: Record<number, boolean>,
+    setMap: React.Dispatch<React.SetStateAction<Record<number, boolean>>>,
+    counterField: "likes_count" | "saves_count" | "reposts_count"
+  ) => {
+    if (!token) {
       return;
     }
+
     try {
-      await apiRequest(path, { method: "POST" }, token);
-      await loadFeed(mode);
+      const response = await apiRequest<{ active: boolean }>(
+        `/videos/${videoId}/${kind}`,
+        { method: "POST" },
+        token
+      );
+      applyReactionState(videoId, response.active, currentMap, setMap, counterField);
     } catch (error) {
       Alert.alert(
         "Не удалось выполнить действие",
@@ -90,6 +160,7 @@ export function FeedScreen() {
     if (!token || !activeVideo || !commentText.trim()) {
       return;
     }
+
     try {
       await apiRequest(
         `/videos/${activeVideo.id}/comments`,
@@ -113,39 +184,56 @@ export function FeedScreen() {
     }
   };
 
+  const viewabilityConfig = useMemo(
+    () => ({
+      itemVisiblePercentThreshold: 80
+    }),
+    []
+  );
+
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: Array<{ item: ApiVideo; isViewable: boolean }> }) => {
+      const firstVisible = viewableItems.find((item) => item.isViewable)?.item;
+      setVisibleVideoId(firstVisible?.id ?? null);
+    }
+  ).current;
+
+  const onMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (videos.length === 0) {
+      return;
+    }
+
+    const nextIndex = Math.round(event.nativeEvent.contentOffset.y / Math.max(listHeight, 1));
+    const boundedIndex = Math.min(Math.max(nextIndex, 0), videos.length - 1);
+    const nextVideo = videos[boundedIndex];
+    if (nextVideo) {
+      setVisibleVideoId(nextVideo.id);
+    }
+
+    if (boundedIndex === videos.length - 1) {
+      const now = Date.now();
+      if (now - lastEndRefreshAt.current > 1500) {
+        lastEndRefreshAt.current = now;
+        void loadFeed({ silent: true });
+      }
+    }
+  };
+
+  const getItemLayout = (_data: ArrayLike<ApiVideo> | null | undefined, index: number) => ({
+    length: listHeight,
+    offset: listHeight * index,
+    index
+  });
+
   return (
-    <Screen>
-      <View style={[styles.header, { paddingHorizontal: spacing.md, paddingTop: spacing.md }]}>
-        <Pressable
-          onPress={() => setMode("for_you")}
-          style={[
-            styles.modeButton,
-            {
-              backgroundColor: mode === "for_you" ? colors.primary : "rgba(255,255,255,0.14)",
-              borderRadius: radius.md
-            }
-          ]}
-        >
-          <Text style={[styles.modeLabel, { color: mode === "for_you" ? "#FFFFFF" : colors.text }]}>
-            Для вас
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setMode("following")}
-          style={[
-            styles.modeButton,
-            {
-              backgroundColor: mode === "following" ? colors.primary : "rgba(255,255,255,0.14)",
-              borderRadius: radius.md
-            }
-          ]}
-        >
-          <Text
-            style={[styles.modeLabel, { color: mode === "following" ? "#FFFFFF" : colors.text }]}
-          >
-            Подписки
-          </Text>
-        </Pressable>
+    <Screen edges={["left", "right"]}>
+      <View
+        style={[
+          styles.header,
+          { paddingHorizontal: spacing.md, paddingTop: insets.top + spacing.sm }
+        ]}
+      >
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Лента</Text>
       </View>
       {loading ? (
         <FeedSkeleton />
@@ -153,45 +241,84 @@ export function FeedScreen() {
         <View style={[styles.emptyState, { padding: spacing.lg }]}>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>Лента пока пустая</Text>
           <Text style={{ color: colors.textSecondary, textAlign: "center" }}>
-            Опубликуйте первый ролик или подпишитесь на авторов, чтобы собрать ленту как в TikTok.
+            Опубликуйте первый ролик, и он сразу появится здесь.
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={videos}
-          pagingEnabled
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <VideoCard
-              video={item}
-              liked={Boolean(likedIds[item.id])}
-              onLike={async () => {
-                const nextLiked = !likedIds[item.id];
-                setLikedIds((current) => ({ ...current, [item.id]: nextLiked }));
-                updateVideoCounters(item.id, (video) => ({
-                  ...video,
-                  likes_count: Math.max(0, video.likes_count + (nextLiked ? 1 : -1))
-                }));
-                await toggle(`/videos/${item.id}/like`);
-              }}
-              onComment={() => void openComments(item)}
-              onSave={async () => {
-                updateVideoCounters(item.id, (video) => ({
-                  ...video,
-                  saves_count: video.saves_count + 1
-                }));
-                await toggle(`/videos/${item.id}/save`);
-              }}
-              onRepost={async () => {
-                updateVideoCounters(item.id, (video) => ({
-                  ...video,
-                  reposts_count: video.reposts_count + 1
-                }));
-                await toggle(`/videos/${item.id}/repost`);
-              }}
-            />
-          )}
-        />
+        <View
+          style={styles.listContainer}
+          onLayout={(event) => {
+            const nextHeight = Math.round(event.nativeEvent.layout.height);
+            if (nextHeight > 0 && nextHeight !== listHeight) {
+              setListHeight(nextHeight);
+            }
+          }}
+        >
+          <FlatList
+            ref={flatListRef}
+            data={videos}
+            pagingEnabled
+            decelerationRate="fast"
+            disableIntervalMomentum
+            showsVerticalScrollIndicator={false}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <VideoCard
+                video={item}
+                liked={Boolean(likedIds[item.id])}
+                saved={Boolean(savedIds[item.id])}
+                reposted={Boolean(repostedIds[item.id])}
+                bottomInset={tabBarHeight}
+                cardHeight={listHeight}
+                isActive={isFocused && visibleVideoId === item.id}
+                onLike={() =>
+                  void toggleReaction(
+                    item.id,
+                    "like",
+                    likedIds,
+                    setLikedIds,
+                    "likes_count"
+                  )
+                }
+                onComment={() => void openComments(item)}
+                onSave={() =>
+                  void toggleReaction(
+                    item.id,
+                    "save",
+                    savedIds,
+                    setSavedIds,
+                    "saves_count"
+                  )
+                }
+                onRepost={() =>
+                  void toggleReaction(
+                    item.id,
+                    "repost",
+                    repostedIds,
+                    setRepostedIds,
+                    "reposts_count"
+                  )
+                }
+              />
+            )}
+            initialNumToRender={1}
+            maxToRenderPerBatch={1}
+            windowSize={2}
+            removeClippedSubviews
+            getItemLayout={getItemLayout}
+            viewabilityConfig={viewabilityConfig}
+            onViewableItemsChanged={onViewableItemsChanged}
+            onMomentumScrollEnd={onMomentumScrollEnd}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={() => void loadFeed({ silent: true })}
+                tintColor={colors.primary}
+                progressViewOffset={insets.top + 48}
+              />
+            }
+          />
+        </View>
       )}
       <Modal
         visible={commentsOpen}
@@ -206,7 +333,8 @@ export function FeedScreen() {
               {
                 backgroundColor: colors.surface,
                 borderTopLeftRadius: radius.lg,
-                borderTopRightRadius: radius.lg
+                borderTopRightRadius: radius.lg,
+                paddingBottom: Math.max(insets.bottom, 18)
               }
             ]}
           >
@@ -268,29 +396,24 @@ export function FeedScreen() {
 const styles = StyleSheet.create({
   header: {
     position: "absolute",
-    top: 10,
+    top: 0,
     left: 0,
     right: 0,
     zIndex: 10,
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 10
-  },
-  modeButton: {
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    minWidth: 108,
     alignItems: "center"
   },
-  modeLabel: {
-    fontWeight: "800",
-    fontSize: 15
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "800"
   },
   emptyState: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: 10
+  },
+  listContainer: {
+    flex: 1
   },
   emptyTitle: {
     fontSize: 28,

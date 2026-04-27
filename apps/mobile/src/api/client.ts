@@ -1,3 +1,6 @@
+import Constants from "expo-constants";
+import { Platform } from "react-native";
+
 export type ApiUser = {
   id: number;
   email: string;
@@ -47,24 +50,101 @@ export type ApiNotification = {
   created_at: string;
 };
 
-const API_URL = "http://10.0.2.2:8000";
+function getExpoHostApiUrl() {
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (!hostUri) {
+    return null;
+  }
+
+  const hostname = hostUri.split(":")[0]?.trim();
+  if (!hostname) {
+    return null;
+  }
+
+  return `http://${hostname}:8000`;
+}
+
+function resolveApiUrl() {
+  const configuredApiUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+  if (configuredApiUrl) {
+    return configuredApiUrl.replace(/\/$/, "");
+  }
+
+  const expoHostApiUrl = getExpoHostApiUrl();
+  if (expoHostApiUrl) {
+    return expoHostApiUrl;
+  }
+
+  if (Platform.OS === "android") {
+    return "http://10.0.2.2:8000";
+  }
+
+  return "http://127.0.0.1:8000";
+}
+
+const API_URL = resolveApiUrl();
+
+function toResolvedUrl(pathname: string, search: string) {
+  return `${API_URL}${pathname}${search}`.replace(/([^:]\/)\/+/g, "$1");
+}
+
+export function normalizeApiAssetUrl(rawUrl: string | null | undefined) {
+  if (!rawUrl) {
+    return null;
+  }
+
+  try {
+    const parsed = new globalThis.URL(rawUrl);
+    const hostname = parsed.hostname.toLowerCase();
+
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "10.0.2.2" ||
+      hostname === "::1"
+    ) {
+      return toResolvedUrl(parsed.pathname, parsed.search);
+    }
+
+    return rawUrl;
+  } catch {
+    if (rawUrl.startsWith("/")) {
+      return toResolvedUrl(rawUrl, "");
+    }
+
+    return rawUrl;
+  }
+}
 
 export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
   token?: string | null
 ): Promise<T> {
+  const isFormData =
+    typeof globalThis.FormData !== "undefined" && options.body instanceof globalThis.FormData;
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers ?? {})
     }
   });
 
   if (!response.ok) {
-    const message = await response.text();
+    const rawMessage = await response.text();
+    let message = rawMessage;
+
+    try {
+      const parsed = JSON.parse(rawMessage) as { detail?: string };
+      if (parsed.detail) {
+        message = parsed.detail;
+      }
+    } catch {
+      // Keep the raw response body when it isn't JSON.
+    }
+
     throw new Error(message || "Request failed");
   }
 

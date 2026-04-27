@@ -10,10 +10,10 @@ export function RegisterScreen({ onLoginPress }: { onLoginPress: () => void }) {
   const { colors, spacing, radius } = useAppTheme();
   const signUp = useAuthStore((state) => state.signUp);
   const loading = useAuthStore((state) => state.loading);
-  const [fullName, setFullName] = useState("ShortFlow Creator");
-  const [username, setUsername] = useState("creator");
-  const [email, setEmail] = useState("creator@shortflow.app");
-  const [password, setPassword] = useState("password123");
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const submit = async () => {
     try {
@@ -24,7 +24,13 @@ export function RegisterScreen({ onLoginPress }: { onLoginPress: () => void }) {
         password
       });
     } catch (error) {
-      Alert.alert("Ошибка регистрации", error instanceof Error ? error.message : "Попробуйте еще раз");
+      const message = error instanceof Error ? error.message : "Попробуйте еще раз";
+      Alert.alert(
+        "Ошибка регистрации",
+        message === "User already exists"
+          ? "Пользователь с такой почтой или именем уже существует. Попробуйте войти."
+          : message
+      );
     }
   };
 
@@ -35,7 +41,15 @@ export function RegisterScreen({ onLoginPress }: { onLoginPress: () => void }) {
         <TextInput
           placeholder="Ваше имя"
           placeholderTextColor={colors.textSecondary}
-          style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border, borderRadius: radius.md }]}
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.surface,
+              color: colors.text,
+              borderColor: colors.border,
+              borderRadius: radius.md
+            }
+          ]}
           value={fullName}
           onChangeText={setFullName}
         />
@@ -43,15 +57,32 @@ export function RegisterScreen({ onLoginPress }: { onLoginPress: () => void }) {
           autoCapitalize="none"
           placeholder="Имя пользователя"
           placeholderTextColor={colors.textSecondary}
-          style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border, borderRadius: radius.md }]}
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.surface,
+              color: colors.text,
+              borderColor: colors.border,
+              borderRadius: radius.md
+            }
+          ]}
           value={username}
           onChangeText={setUsername}
         />
         <TextInput
           autoCapitalize="none"
+          keyboardType="email-address"
           placeholder="Почта"
           placeholderTextColor={colors.textSecondary}
-          style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border, borderRadius: radius.md }]}
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.surface,
+              color: colors.text,
+              borderColor: colors.border,
+              borderRadius: radius.md
+            }
+          ]}
           value={email}
           onChangeText={setEmail}
         />
@@ -59,7 +90,15 @@ export function RegisterScreen({ onLoginPress }: { onLoginPress: () => void }) {
           secureTextEntry
           placeholder="Пароль"
           placeholderTextColor={colors.textSecondary}
-          style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border, borderRadius: radius.md }]}
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.surface,
+              color: colors.text,
+              borderColor: colors.border,
+              borderRadius: radius.md
+            }
+          ]}
           value={password}
           onChangeText={setPassword}
         />

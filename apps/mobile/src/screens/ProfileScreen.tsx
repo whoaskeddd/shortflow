@@ -1,23 +1,35 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { Screen } from "@/components/Screen";
+import { getScreenBottomPadding } from "@/navigation/tabBarLayout";
 import { useAuthStore } from "@/store/auth";
 import { useAppTheme } from "@/theme/ThemeProvider";
 
 export function ProfileScreen() {
   const { colors, spacing } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const me = useAuthStore((state) => state.me);
   const signOut = useAuthStore((state) => state.signOut);
 
   return (
-    <Screen>
-      <View style={{ flex: 1, padding: spacing.lg, gap: spacing.md }}>
+    <Screen edges={["top", "left", "right", "bottom"]}>
+      <View
+        style={{
+          flex: 1,
+          padding: spacing.lg,
+          gap: spacing.md,
+          paddingBottom: getScreenBottomPadding(insets.bottom)
+        }}
+      >
         <View style={[styles.hero, { backgroundColor: colors.surface }]}>
           <Text style={[styles.name, { color: colors.text }]}>{me?.full_name ?? "Гость"}</Text>
           <Text style={{ color: colors.textSecondary }}>@{me?.username ?? "anonymous"}</Text>
-          <Text style={{ color: colors.textSecondary }}>{me?.bio || "Биография пока пустая. Добавьте описание автора позже."}</Text>
+          <Text style={{ color: colors.textSecondary }}>
+            {me?.bio || "Биография пока пустая. Добавьте описание автора позже."}
+          </Text>
         </View>
         <View style={[styles.statsRow, { gap: spacing.sm }]}>
           <StatCard title="Статус" value="Онлайн" />

@@ -4,7 +4,7 @@
 - Task: разработать production-ready MVP ShortFlow по `tech.md` и исходному плану, исключив AI-модерацию до отдельного этапа.
 - Canonical input: `C:\develop\shortflow\tech.md`
 - Repo context: новый монорепозиторий `backend + mobile + infra`
-- Last updated: 2026-04-26
+- Last updated: 2026-04-27
 
 ## Assumptions
 - AI-модерация и очередь ручной модерации откладываются, но доменная модель допускает их добавление позже без ломающих миграций.
@@ -29,6 +29,28 @@
 | M3 | React Native mobile MVP | M1 | [x] |
 | M4 | Shared infrastructure and developer experience | M2, M3 | [x] |
 | M5 | Validation, docs, and handoff | M2, M3, M4 | [~] |
+| M6 | Mobile polish: smooth motion, safe areas, local video picker | M3 | [~] |
+
+## M6. Mobile polish: smooth motion, safe areas, local video picker `[~]`
+### Goal
+- Убрать резкие визуальные переходы, выровнять mobile safe-area/отступы и перевести публикацию ролика на выбор локального файла с телефона или ПК.
+
+### Tasks
+- [ ] Перевести shared layout и tab bar на safe-area-aware отступы.
+- [ ] Смягчить loading/feedback-анимации без резких миганий.
+- [ ] Заменить ручной ввод URL на системный выбор локального видеофайла и multipart upload.
+- [ ] Прогнать mobile lint/typecheck и зафиксировать результат в execution docs.
+
+### Definition of Done
+- Ключевые мобильные экраны не залезают под системное время, батарею и home indicator.
+- Видео выбирается через системный picker и загружается в API как файл.
+- Splash/skeleton/press feedback воспринимаются плавно и без вспышек.
+
+### Validation
+```sh
+npm run lint --workspace @shortflow/mobile
+npm run typecheck --workspace @shortflow/mobile
+```
 
 ## M1. Durable planning and repo foundation `[x]`
 ### Goal
