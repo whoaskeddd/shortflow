@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session
@@ -44,6 +45,7 @@ def get_test_video_query():
             )
         )
     )
+
 
 def cleanup_test_videos(
     db: Session,
