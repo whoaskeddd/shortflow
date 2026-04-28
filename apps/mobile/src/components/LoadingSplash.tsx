@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Animated, Easing, StyleSheet, Text, View } from "react-native";
 
@@ -8,9 +9,9 @@ export function LoadingSplash() {
   const [step, setStep] = useState(0);
   const messageOpacity = useRef(new Animated.Value(1)).current;
   const messages = [
-    "Готовим ленту коротких видео",
-    "Подключаем профиль, поиск и активность",
-    "Собираем мобильный опыт как в TikTok"
+    "Готовим спокойную персональную ленту",
+    "Синхронизируем профиль и активность",
+    "Настраиваем плавный просмотр видео"
   ];
 
   useEffect(() => {
@@ -36,7 +37,11 @@ export function LoadingSplash() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.glow, { backgroundColor: "rgba(10,132,255,0.16)" }]} />
+      <View style={[styles.glow, { backgroundColor: colors.glow }]} />
+      <LinearGradient
+        colors={["rgba(208,180,118,0.34)", "rgba(20,18,15,0.02)"]}
+        style={styles.halo}
+      />
       <Text style={[styles.brand, { color: colors.text }]}>ShortFlow</Text>
       <Animated.Text style={[styles.message, { color: colors.textSecondary, opacity: messageOpacity }]}>
         {messages[step]}
@@ -54,14 +59,24 @@ const styles = StyleSheet.create({
     padding: 24
   },
   glow: {
-    width: 116,
-    height: 116,
+    position: "absolute",
+    width: 240,
+    height: 240,
     borderRadius: 999,
-    marginBottom: 24
+    opacity: 0.42
+  },
+  halo: {
+    width: 118,
+    height: 118,
+    borderRadius: 999,
+    marginBottom: 28,
+    borderWidth: 1,
+    borderColor: "rgba(208,180,118,0.22)"
   },
   brand: {
-    fontSize: 42,
+    fontSize: 40,
     fontWeight: "900",
+    letterSpacing: 0,
     marginBottom: 10
   },
   message: {

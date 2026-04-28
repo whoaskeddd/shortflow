@@ -1,5 +1,11 @@
 # ShortFlow Test Plan
 
+## Premium Redesign Checks
+- Scope: graphite/dark palette, muted gold accents, glass surfaces, gold gradient buttons, frosted bottom navigation, readable feed title/description/tags, and non-overlapping action rail.
+- Static gates passed: `npm run lint --workspace @shortflow/mobile`; `npm run typecheck --workspace @shortflow/mobile`.
+- Manual visual gate pending: open Expo preview on mobile-sized and web-sized viewports and inspect auth, feed, comments modal, upload, search, notifications, and profile.
+- Acceptance: no text overlap, no harsh yellow accents, feed metadata remains readable over video, and all touched screens share one cohesive premium visual language.
+
 ## Source
 - Task: собрать production-ready MVP ShortFlow с profanity-only AI-модерацией
 - Plan file: `C:\develop\shortflow\plan.md`

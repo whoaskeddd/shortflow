@@ -9,21 +9,21 @@ export function FeedSkeleton() {
   const { colors } = useAppTheme();
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const opacity = useRef(new Animated.Value(0.45)).current;
+  const opacity = useRef(new Animated.Value(0.42)).current;
   const tabBarHeight = getTabBarHeight(insets.bottom);
 
   useEffect(() => {
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, {
-          toValue: 0.74,
-          duration: 1100,
+          toValue: 0.72,
+          duration: 1200,
           easing: Easing.inOut(Easing.quad),
           useNativeDriver: true
         }),
         Animated.timing(opacity, {
-          toValue: 0.45,
-          duration: 1100,
+          toValue: 0.42,
+          duration: 1200,
           easing: Easing.inOut(Easing.quad),
           useNativeDriver: true
         })
@@ -38,7 +38,7 @@ export function FeedSkeleton() {
       style={[
         styles.container,
         {
-          backgroundColor: "#090B12",
+          backgroundColor: colors.background,
           height,
           paddingTop: insets.top + 18,
           paddingBottom: tabBarHeight + 20
@@ -46,19 +46,19 @@ export function FeedSkeleton() {
       ]}
     >
       <Animated.View
-        style={[styles.headerTitle, { opacity, backgroundColor: "rgba(255,255,255,0.14)" }]}
+        style={[styles.headerTitle, { opacity, backgroundColor: "rgba(208,180,118,0.18)" }]}
       />
       <View style={styles.content}>
-        <Animated.View style={[styles.author, { opacity, backgroundColor: "rgba(255,255,255,0.22)" }]} />
-        <Animated.View style={[styles.titleLong, { opacity, backgroundColor: "rgba(255,255,255,0.2)" }]} />
-        <Animated.View style={[styles.titleShort, { opacity, backgroundColor: "rgba(255,255,255,0.16)" }]} />
-        <Animated.View style={[styles.desc, { opacity, backgroundColor: "rgba(255,255,255,0.14)" }]} />
+        <Animated.View style={[styles.author, { opacity, backgroundColor: colors.border }]} />
+        <Animated.View style={[styles.titleLong, { opacity, backgroundColor: "rgba(245,240,231,0.16)" }]} />
+        <Animated.View style={[styles.titleShort, { opacity, backgroundColor: "rgba(245,240,231,0.12)" }]} />
+        <Animated.View style={[styles.desc, { opacity, backgroundColor: "rgba(245,240,231,0.10)" }]} />
       </View>
       <View style={styles.rightRail}>
-        <Animated.View style={[styles.avatar, { opacity, backgroundColor: colors.accent }]} />
-        <Animated.View style={[styles.action, { opacity, backgroundColor: "rgba(255,255,255,0.16)" }]} />
-        <Animated.View style={[styles.action, { opacity, backgroundColor: "rgba(255,255,255,0.16)" }]} />
-        <Animated.View style={[styles.action, { opacity, backgroundColor: "rgba(255,255,255,0.16)" }]} />
+        <Animated.View style={[styles.avatar, { opacity, backgroundColor: colors.primary }]} />
+        <Animated.View style={[styles.action, { opacity, backgroundColor: colors.surfaceGlass }]} />
+        <Animated.View style={[styles.action, { opacity, backgroundColor: colors.surfaceGlass }]} />
+        <Animated.View style={[styles.action, { opacity, backgroundColor: colors.surfaceGlass }]} />
       </View>
     </View>
   );
@@ -70,52 +70,52 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     alignSelf: "center",
-    width: 120,
+    width: 112,
     height: 28,
     borderRadius: 14
   },
   content: {
-    paddingHorizontal: 16,
-    paddingBottom: 24
+    paddingHorizontal: 20,
+    paddingBottom: 34
   },
   author: {
-    width: 150,
+    width: 142,
     height: 22,
     borderRadius: 12,
     marginBottom: 18
   },
   titleLong: {
-    width: "84%",
-    height: 34,
+    width: "78%",
+    height: 30,
     borderRadius: 14,
     marginBottom: 10
   },
   titleShort: {
-    width: "62%",
-    height: 34,
+    width: "58%",
+    height: 30,
     borderRadius: 14,
     marginBottom: 14
   },
   desc: {
-    width: "72%",
+    width: "70%",
     height: 18,
     borderRadius: 12
   },
   rightRail: {
     position: "absolute",
-    right: 16,
-    bottom: 124,
+    right: 18,
+    bottom: 126,
     alignItems: "center",
     gap: 14
   },
   avatar: {
-    width: 64,
-    height: 64,
+    width: 58,
+    height: 58,
     borderRadius: 999
   },
   action: {
-    width: 58,
-    height: 58,
-    borderRadius: 24
+    width: 52,
+    height: 52,
+    borderRadius: 20
   }
 });

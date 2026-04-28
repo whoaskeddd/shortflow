@@ -45,7 +45,7 @@ export function VideoCard({
   const likeScale = useRef(new Animated.Value(1)).current;
   const videoUrl = normalizeApiAssetUrl(video.video_url);
   const avatarUrl = normalizeApiAssetUrl(video.author.avatar_url);
-  const contentBottomInset = bottomInset + 44;
+  const contentBottomInset = bottomInset + 30;
 
   useEffect(() => {
     if (!liked) {
@@ -57,19 +57,19 @@ export function VideoCard({
         toValue: 1.08,
         useNativeDriver: true,
         speed: 14,
-        bounciness: 6
+        bounciness: 5
       }),
       Animated.spring(likeScale, {
         toValue: 1,
         useNativeDriver: true,
         speed: 14,
-        bounciness: 5
+        bounciness: 4
       })
     ]).start();
   }, [liked, likeScale]);
 
   return (
-    <View style={[styles.container, { height: cardHeight }]}>
+    <View style={[styles.container, { backgroundColor: colors.background, height: cardHeight }]}>
       <Video
         source={videoUrl ? { uri: videoUrl } : undefined}
         style={StyleSheet.absoluteFill}
@@ -79,27 +79,61 @@ export function VideoCard({
         resizeMode={ResizeMode.COVER}
       />
       <LinearGradient
-        colors={["rgba(0,0,0,0.28)", "transparent", "rgba(0,0,0,0.88)"]}
-        locations={[0, 0.32, 1]}
+        colors={[
+          "rgba(8,8,7,0.66)",
+          "rgba(8,8,7,0.08)",
+          "rgba(8,8,7,0.44)",
+          "rgba(8,8,7,0.94)"
+        ]}
+        locations={[0, 0.34, 0.66, 1]}
         style={[
           styles.overlay,
           {
-            paddingTop: insets.top + 20,
+            paddingTop: insets.top + 18,
             paddingBottom: contentBottomInset
           }
         ]}
       >
-        <View style={[styles.meta, { padding: spacing.md, paddingBottom: spacing.xl }]}>
-          <Text style={styles.author}>@{video.author.username}</Text>
-          <Text style={styles.title}>{video.title}</Text>
-          <Text style={[styles.description, { color: colors.textSecondary }]}>
-            {video.description}
-          </Text>
-          <Text style={styles.tags}>
-            {video.hashtags.map((tag) => `#${tag}`).join(" ")}
-          </Text>
+        <View style={[styles.meta, { padding: spacing.md, paddingBottom: spacing.lg }]}>
+          <View
+            style={[
+              styles.copyPanel,
+              {
+                backgroundColor: colors.surfaceGlass,
+                borderColor: colors.border
+              }
+            ]}
+          >
+            <Text style={[styles.author, { color: colors.accent }]}>@{video.author.username}</Text>
+            <Text numberOfLines={2} style={[styles.title, { color: colors.text }]}>
+              {video.title}
+            </Text>
+            {!!video.description && (
+              <Text numberOfLines={3} style={[styles.description, { color: colors.textSecondary }]}>
+                {video.description}
+              </Text>
+            )}
+            {video.hashtags.length > 0 && (
+              <View style={styles.tagsRow}>
+                {video.hashtags.slice(0, 5).map((tag) => (
+                  <View
+                    key={tag}
+                    style={[
+                      styles.tagChip,
+                      {
+                        backgroundColor: "rgba(208,180,118,0.10)",
+                        borderColor: colors.border
+                      }
+                    ]}
+                  >
+                    <Text style={[styles.tagText, { color: colors.accent }]}>#{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
         </View>
-        <View style={[styles.actions, { padding: spacing.md, paddingBottom: spacing.xl + 10 }]}>
+        <View style={[styles.actions, { padding: spacing.md, paddingBottom: spacing.lg + 4 }]}>
           <AvatarRail username={video.author.username} avatarUrl={avatarUrl} />
           <LikeAction
             count={video.likes_count}
@@ -141,10 +175,24 @@ function Action({
   onPress: () => void;
   active?: boolean;
 }) {
+  const { colors } = useAppTheme();
+
   return (
-    <Pressable onPress={onPress} style={[styles.action, active && styles.actionActive]}>
-      <Ionicons name={icon} size={24} color="#FFFFFF" />
-      <Text style={styles.actionCount}>{count}</Text>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.action,
+        {
+          backgroundColor: active ? "rgba(208,180,118,0.18)" : "rgba(20,18,15,0.58)",
+          borderColor: active ? "rgba(208,180,118,0.36)" : "rgba(245,240,231,0.12)",
+          transform: [{ scale: pressed ? 0.96 : 1 }]
+        }
+      ]}
+    >
+      <Ionicons name={icon} size={23} color={active ? colors.accent : colors.text} />
+      <Text style={[styles.actionCount, { color: active ? colors.accent : colors.textSecondary }]}>
+        {count}
+      </Text>
     </Pressable>
   );
 }
@@ -162,21 +210,20 @@ function LikeAction({
 }) {
   return (
     <Animated.View style={{ transform: [{ scale }] }}>
-      <Pressable onPress={onPress} style={[styles.action, active && styles.actionActive]}>
-        <Ionicons name={active ? "heart" : "heart-outline"} size={24} color="#FFFFFF" />
-        <Text style={styles.actionCount}>{count}</Text>
-      </Pressable>
+      <Action icon={active ? "heart" : "heart-outline"} count={count} onPress={onPress} active={active} />
     </Animated.View>
   );
 }
 
 function AvatarRail({ username, avatarUrl }: { username: string; avatarUrl: string | null }) {
+  const { colors } = useAppTheme();
+
   return (
-    <View style={styles.avatarWrap}>
+    <View style={[styles.avatarWrap, { borderColor: colors.border, backgroundColor: colors.surfaceGlass }]}>
       {avatarUrl ? (
         <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
       ) : (
-        <LinearGradient colors={["#0A84FF", "#7C6CFF"]} style={styles.avatarFallback}>
+        <LinearGradient colors={[colors.accent, colors.primary, colors.mutedGold]} style={styles.avatarFallback}>
           <Text style={styles.avatarLetter}>{username.slice(0, 1).toUpperCase()}</Text>
         </LinearGradient>
       )}
@@ -186,8 +233,7 @@ function AvatarRail({ username, avatarUrl }: { username: string; avatarUrl: stri
 
 const styles = StyleSheet.create({
   container: {
-    justifyContent: "flex-end",
-    backgroundColor: "#000000"
+    justifyContent: "flex-end"
   },
   overlay: {
     flex: 1,
@@ -197,72 +243,92 @@ const styles = StyleSheet.create({
   },
   meta: {
     flex: 1,
-    gap: 10,
-    paddingRight: 16
+    paddingRight: 10
+  },
+  copyPanel: {
+    maxWidth: 360,
+    gap: 9,
+    borderWidth: 1,
+    borderRadius: 26,
+    padding: 16,
+    shadowColor: "#000000",
+    shadowOpacity: 0.24,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 }
   },
   author: {
-    color: "#FFFFFF",
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "800"
   },
   title: {
-    color: "#FFFFFF",
-    fontSize: 30,
+    fontSize: 25,
     fontWeight: "900",
-    lineHeight: 34
+    letterSpacing: 0,
+    lineHeight: 30
   },
   description: {
-    fontSize: 16,
-    lineHeight: 23,
-    maxWidth: 280
-  },
-  tags: {
-    color: "#C7D2FE",
     fontSize: 15,
-    fontWeight: "700"
+    lineHeight: 22
+  },
+  tagsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingTop: 2
+  },
+  tagChip: {
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5
+  },
+  tagText: {
+    fontSize: 12,
+    fontWeight: "800"
   },
   actions: {
-    gap: 14,
+    gap: 13,
     alignItems: "center"
   },
   avatarWrap: {
-    marginBottom: 2,
-    alignItems: "center"
-  },
-  avatarImage: {
-    width: 56,
-    height: 56,
+    width: 58,
+    height: 58,
     borderRadius: 999,
-    borderWidth: 2,
-    borderColor: "#FFFFFF"
-  },
-  avatarFallback: {
-    width: 56,
-    height: 56,
-    borderRadius: 999,
+    borderWidth: 1,
+    padding: 3,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "#FFFFFF"
+    marginBottom: 2
+  },
+  avatarImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 999
+  },
+  avatarFallback: {
+    width: 50,
+    height: 50,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center"
   },
   avatarLetter: {
-    color: "#FFFFFF",
-    fontSize: 22,
+    color: "#11100B",
+    fontSize: 20,
     fontWeight: "900"
   },
   action: {
-    minWidth: 56,
+    width: 54,
+    minHeight: 54,
     alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    gap: 4
+    justifyContent: "center",
+    borderWidth: 1,
+    borderRadius: 21,
+    paddingVertical: 7,
+    gap: 3
   },
   actionCount: {
-    color: "#FFFFFF",
     fontSize: 12,
-    fontWeight: "700"
-  },
-  actionActive: {
-    opacity: 1
+    fontWeight: "800"
   }
 });

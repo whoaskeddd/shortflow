@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useMemo, useState } from "react";
 import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
@@ -12,7 +13,7 @@ import { useAppTheme } from "@/theme/ThemeProvider";
 
 export function ProfileScreen() {
   const token = useAuthStore((state) => state.accessToken);
-  const { colors, spacing } = useAppTheme();
+  const { colors, spacing, radius } = useAppTheme();
   const insets = useSafeAreaInsets();
   const me = useAuthStore((state) => state.me);
   const signOut = useAuthStore((state) => state.signOut);
@@ -94,12 +95,30 @@ export function ProfileScreen() {
         }}
         ListHeaderComponent={
           <View style={{ gap: spacing.md, marginBottom: spacing.md }}>
-            <View style={[styles.hero, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.name, { color: colors.text }]}>{me?.full_name ?? "Гость"}</Text>
-              <Text style={{ color: colors.textSecondary }}>@{me?.username ?? "anonymous"}</Text>
-              <Text style={{ color: colors.textSecondary }}>
-                {me?.bio || "Биография пока пустая. Добавьте описание автора позже."}
-              </Text>
+            <View
+              style={[
+                styles.hero,
+                {
+                  backgroundColor: colors.surfaceGlass,
+                  borderColor: colors.border,
+                  borderRadius: radius.xl
+                }
+              ]}
+            >
+              <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+                <Text style={styles.avatarLetter}>
+                  {(me?.username ?? "S").slice(0, 1).toUpperCase()}
+                </Text>
+              </View>
+              <View style={styles.heroText}>
+                <Text style={[styles.name, { color: colors.text }]}>{me?.full_name ?? "Гость"}</Text>
+                <Text style={{ color: colors.accent, fontWeight: "700" }}>
+                  @{me?.username ?? "anonymous"}
+                </Text>
+                <Text style={[styles.bio, { color: colors.textSecondary }]}>
+                  {me?.bio || "Биография пока пустая. Добавьте описание автора позже."}
+                </Text>
+              </View>
             </View>
             <View style={[styles.statsRow, { gap: spacing.sm }]}>
               <StatCard title="Видео" value={videos.length.toString()} />
@@ -115,7 +134,16 @@ export function ProfileScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <View style={[styles.videoCard, { backgroundColor: colors.surface }]}>
+          <View
+            style={[
+              styles.videoCard,
+              {
+                backgroundColor: colors.surfaceGlass,
+                borderColor: colors.border,
+                borderRadius: radius.lg
+              }
+            ]}
+          >
             <View style={styles.videoHeader}>
               <View style={styles.videoMeta}>
                 <Text style={[styles.videoTitle, { color: colors.text }]}>{item.title}</Text>
@@ -126,17 +154,19 @@ export function ProfileScreen() {
               <Pressable
                 onPress={() => confirmDelete(item)}
                 disabled={deletingId === item.id}
-                style={[
+                style={({ pressed }) => [
                   styles.deleteButton,
-                  { backgroundColor: colors.danger, opacity: deletingId === item.id ? 0.6 : 1 }
+                  {
+                    backgroundColor: "rgba(214,111,103,0.14)",
+                    borderColor: "rgba(214,111,103,0.34)",
+                    opacity: deletingId === item.id || pressed ? 0.64 : 1
+                  }
                 ]}
               >
-                <Text style={styles.deleteLabel}>
-                  {deletingId === item.id ? "Удаляем..." : "Удалить"}
-                </Text>
+                <Ionicons name="trash-outline" size={18} color={colors.danger} />
               </Pressable>
             </View>
-            <Text style={{ color: colors.textSecondary }}>
+            <Text style={{ color: colors.textSecondary, lineHeight: 21 }}>
               {item.description || "Описание не добавлено."}
             </Text>
             <View style={styles.metricsRow}>
@@ -152,16 +182,16 @@ export function ProfileScreen() {
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
               {loading ? "Загружаем публикации" : "Публикаций пока нет"}
             </Text>
-            <Text style={{ color: colors.textSecondary, textAlign: "center" }}>
+            <Text style={{ color: colors.textSecondary, textAlign: "center", lineHeight: 22 }}>
               {loading
                 ? "Подтягиваем ваши ролики из профиля."
-                : "После публикации ролики появятся здесь и их можно будет удалить из профиля."}
+                : "После публикации ролики появятся здесь."}
             </Text>
           </View>
         }
         ListFooterComponent={
           <View style={{ marginTop: spacing.md }}>
-            <PrimaryButton title="Выйти" onPress={signOut} />
+            <PrimaryButton title="Выйти" onPress={signOut} muted />
           </View>
         }
       />
@@ -170,10 +200,19 @@ export function ProfileScreen() {
 }
 
 function StatCard({ title, value }: { title: string; value: string }) {
-  const { colors } = useAppTheme();
+  const { colors, radius } = useAppTheme();
 
   return (
-    <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
+    <View
+      style={[
+        styles.statCard,
+        {
+          backgroundColor: colors.surfaceGlass,
+          borderColor: colors.border,
+          borderRadius: radius.lg
+        }
+      ]}
+    >
       <Text style={[styles.statValue, { color: colors.text }]}>{value}</Text>
       <Text style={{ color: colors.textSecondary }}>{title}</Text>
     </View>
@@ -182,13 +221,35 @@ function StatCard({ title, value }: { title: string; value: string }) {
 
 const styles = StyleSheet.create({
   hero: {
-    padding: 20,
-    borderRadius: 28,
-    gap: 8
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    padding: 18,
+    gap: 14
+  },
+  avatar: {
+    width: 62,
+    height: 62,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  avatarLetter: {
+    color: "#11100B",
+    fontSize: 24,
+    fontWeight: "900"
+  },
+  heroText: {
+    flex: 1,
+    gap: 5
   },
   name: {
-    fontSize: 28,
-    fontWeight: "800"
+    fontSize: 27,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  bio: {
+    lineHeight: 21
   },
   statsRow: {
     flexDirection: "row"
@@ -197,21 +258,21 @@ const styles = StyleSheet.create({
     gap: 4
   },
   sectionTitle: {
-    fontSize: 22,
-    fontWeight: "800"
+    fontSize: 23,
+    fontWeight: "900"
   },
   statCard: {
     flex: 1,
-    padding: 16,
-    borderRadius: 20
+    borderWidth: 1,
+    padding: 15
   },
   statValue: {
-    fontSize: 20,
-    fontWeight: "800"
+    fontSize: 21,
+    fontWeight: "900"
   },
   videoCard: {
+    borderWidth: 1,
     padding: 16,
-    borderRadius: 22,
     gap: 10
   },
   videoHeader: {
@@ -228,13 +289,12 @@ const styles = StyleSheet.create({
     fontWeight: "800"
   },
   deleteButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
     borderRadius: 14
-  },
-  deleteLabel: {
-    color: "#FFFFFF",
-    fontWeight: "700"
   },
   metricsRow: {
     flexDirection: "row",

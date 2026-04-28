@@ -1,3 +1,5 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useIsFocused } from "@react-navigation/native";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
@@ -13,7 +15,6 @@ import {
   View,
   useWindowDimensions
 } from "react-native";
-import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiComment, ApiVideo, apiRequest } from "@/api/client";
@@ -233,15 +234,26 @@ export function FeedScreen() {
           { paddingHorizontal: spacing.md, paddingTop: insets.top + spacing.sm }
         ]}
       >
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Лента</Text>
+        <View
+          style={[
+            styles.headerPill,
+            {
+              backgroundColor: colors.surfaceGlass,
+              borderColor: colors.border
+            }
+          ]}
+        >
+          <Text style={[styles.headerTitle, { color: colors.text }]}>ShortFlow</Text>
+          <Text style={[styles.headerAccent, { color: colors.accent }]}>For You</Text>
+        </View>
       </View>
       {loading ? (
         <FeedSkeleton />
       ) : videos.length === 0 ? (
         <View style={[styles.emptyState, { padding: spacing.lg }]}>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>Лента пока пустая</Text>
-          <Text style={{ color: colors.textSecondary, textAlign: "center" }}>
-            Опубликуйте первый ролик, и он сразу появится здесь.
+          <Text style={[styles.emptyCopy, { color: colors.textSecondary }]}>
+            Опубликуйте первый ролик, и он появится здесь.
           </Text>
         </View>
       ) : (
@@ -332,28 +344,41 @@ export function FeedScreen() {
               styles.modalCard,
               {
                 backgroundColor: colors.surface,
-                borderTopLeftRadius: radius.lg,
-                borderTopRightRadius: radius.lg,
+                borderColor: colors.border,
+                borderTopLeftRadius: radius.xl,
+                borderTopRightRadius: radius.xl,
                 paddingBottom: Math.max(insets.bottom, 18)
               }
             ]}
           >
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Комментарии</Text>
-              <Pressable onPress={() => setCommentsOpen(false)}>
-                <Text style={{ color: colors.primary, fontWeight: "700" }}>Закрыть</Text>
+              <View>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>Комментарии</Text>
+                <Text numberOfLines={1} style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
+                  {activeVideo?.title ?? "Обсуждение ролика"}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setCommentsOpen(false)}
+                style={({ pressed }) => [
+                  styles.closeButton,
+                  {
+                    backgroundColor: colors.elevated,
+                    borderColor: colors.border,
+                    opacity: pressed ? 0.74 : 1
+                  }
+                ]}
+              >
+                <Ionicons name="close" size={20} color={colors.accent} />
               </Pressable>
             </View>
-            <Text style={{ color: colors.textSecondary, marginBottom: 14 }}>
-              {activeVideo?.title ?? "Обсуждение ролика"}
-            </Text>
             <FlatList
               data={comments}
               keyExtractor={(item) => item.id.toString()}
               renderItem={({ item }) => (
                 <View style={[styles.commentCard, { borderBottomColor: colors.border }]}>
                   <Text style={[styles.commentBody, { color: colors.text }]}>{item.body}</Text>
-                  <Text style={{ color: colors.textSecondary, marginTop: 4 }}>
+                  <Text style={[styles.commentDate, { color: colors.textSecondary }]}>
                     {new Date(item.created_at).toLocaleString()}
                   </Text>
                 </View>
@@ -362,30 +387,36 @@ export function FeedScreen() {
                 <Text style={{ color: colors.textSecondary }}>Комментариев пока нет.</Text>
               }
             />
-            <TextInput
-              value={commentText}
-              onChangeText={setCommentText}
-              placeholder="Напишите комментарий"
-              placeholderTextColor={colors.textSecondary}
-              style={[
-                styles.commentInput,
-                {
-                  backgroundColor: colors.background,
-                  color: colors.text,
-                  borderColor: colors.border,
-                  borderRadius: radius.md
-                }
-              ]}
-            />
-            <Pressable
-              onPress={() => void sendComment()}
-              style={[
-                styles.sendButton,
-                { backgroundColor: colors.primary, borderRadius: radius.md }
-              ]}
-            >
-              <Text style={styles.sendButtonLabel}>Отправить</Text>
-            </Pressable>
+            <View style={styles.commentComposer}>
+              <TextInput
+                value={commentText}
+                onChangeText={setCommentText}
+                placeholder="Напишите комментарий"
+                placeholderTextColor={colors.textSecondary}
+                style={[
+                  styles.commentInput,
+                  {
+                    backgroundColor: colors.input,
+                    color: colors.text,
+                    borderColor: colors.border,
+                    borderRadius: radius.md
+                  }
+                ]}
+              />
+              <Pressable
+                onPress={() => void sendComment()}
+                style={({ pressed }) => [
+                  styles.sendButton,
+                  {
+                    backgroundColor: colors.primary,
+                    borderRadius: radius.md,
+                    opacity: pressed ? 0.82 : 1
+                  }
+                ]}
+              >
+                <Ionicons name="arrow-up" size={21} color="#11100B" />
+              </Pressable>
+            </View>
           </View>
         </View>
       </Modal>
@@ -402,15 +433,33 @@ const styles = StyleSheet.create({
     zIndex: 10,
     alignItems: "center"
   },
+  headerPill: {
+    minWidth: 168,
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 8
+  },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: "800"
+    fontSize: 16,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  headerAccent: {
+    fontSize: 11,
+    fontWeight: "800",
+    marginTop: 1
   },
   emptyState: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: 10
+  },
+  emptyCopy: {
+    textAlign: "center",
+    lineHeight: 22
   },
   listContainer: {
     flex: 1
@@ -422,45 +471,65 @@ const styles = StyleSheet.create({
   modalBackdrop: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(0,0,0,0.45)"
+    backgroundColor: "rgba(0,0,0,0.58)"
   },
   modalCard: {
     minHeight: "58%",
     maxHeight: "82%",
+    borderWidth: 1,
     padding: 20
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8
+    gap: 16,
+    marginBottom: 16
   },
   modalTitle: {
     fontSize: 24,
-    fontWeight: "800"
+    fontWeight: "900"
+  },
+  modalSubtitle: {
+    maxWidth: 260,
+    marginTop: 3
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderRadius: 999
   },
   commentCard: {
-    paddingVertical: 12,
+    paddingVertical: 13,
     borderBottomWidth: 1
   },
   commentBody: {
     fontSize: 16,
-    lineHeight: 22
+    lineHeight: 23
+  },
+  commentDate: {
+    marginTop: 5,
+    fontSize: 12
+  },
+  commentComposer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 14
   },
   commentInput: {
-    marginTop: 14,
+    flex: 1,
     borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: 12
   },
   sendButton: {
-    marginTop: 12,
+    width: 48,
+    height: 48,
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14
-  },
-  sendButtonLabel: {
-    color: "#FFFFFF",
-    fontWeight: "800"
+    justifyContent: "center"
   }
 });

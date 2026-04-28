@@ -1,6 +1,7 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import * as DocumentPicker from "expo-document-picker";
 import React, { useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import * as DocumentPicker from "expo-document-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { apiRequest } from "@/api/client";
@@ -81,7 +82,7 @@ export function UploadScreen() {
       setDescription("");
       setHashtags("");
       setSelectedVideo(null);
-      Alert.alert("Ролик опубликован", "Видео прошло проверку и уже доступно в ленте.");
+      Alert.alert("Ролик опубликован", "Видео прошло проверку и доступно в ленте.");
     } catch (error) {
       Alert.alert(
         "Ошибка публикации",
@@ -102,100 +103,153 @@ export function UploadScreen() {
         }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={[styles.heading, { color: colors.text }]}>Опубликовать новый ролик</Text>
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Название"
-          placeholderTextColor={colors.textSecondary}
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.surface,
-              color: colors.text,
-              borderColor: colors.border,
-              borderRadius: radius.md
-            }
-          ]}
-        />
-        <TextInput
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Описание"
-          placeholderTextColor={colors.textSecondary}
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.surface,
-              color: colors.text,
-              borderColor: colors.border,
-              borderRadius: radius.md
-            }
-          ]}
-        />
-        <PrimaryButton
-          title={selectedVideo ? "Выбрать другой файл" : "Выбрать видео из файлов"}
-          onPress={() => void pickVideo()}
-        />
+        <View style={styles.header}>
+          <Text style={[styles.eyebrow, { color: colors.accent }]}>Creator Studio</Text>
+          <Text style={[styles.heading, { color: colors.text }]}>Новый ролик</Text>
+          <Text style={[styles.copy, { color: colors.textSecondary }]}>
+            Добавьте видео, короткое название, описание и теги.
+          </Text>
+        </View>
         <View
           style={[
-            styles.fileCard,
+            styles.panel,
             {
-              backgroundColor: colors.surface,
+              backgroundColor: colors.surfaceGlass,
               borderColor: colors.border,
-              borderRadius: radius.md
+              borderRadius: radius.xl
             }
           ]}
         >
-          <Text style={[styles.fileLabel, { color: colors.text }]}>
-            {selectedVideo?.name ?? "Файл пока не выбран"}
-          </Text>
-          <Text style={{ color: colors.textSecondary }}>
-            {selectedVideo?.mimeType ?? "Откроется системный выбор файлов на телефоне или ПК"}
-          </Text>
+          <TextInput
+            value={title}
+            onChangeText={setTitle}
+            placeholder="Название"
+            placeholderTextColor={colors.textSecondary}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.input,
+                color: colors.text,
+                borderColor: colors.border,
+                borderRadius: radius.md
+              }
+            ]}
+          />
+          <TextInput
+            value={description}
+            onChangeText={setDescription}
+            placeholder="Описание"
+            placeholderTextColor={colors.textSecondary}
+            multiline
+            style={[
+              styles.input,
+              styles.textarea,
+              {
+                backgroundColor: colors.input,
+                color: colors.text,
+                borderColor: colors.border,
+                borderRadius: radius.md
+              }
+            ]}
+          />
+          <PrimaryButton
+            title={selectedVideo ? "Выбрать другой файл" : "Выбрать видео"}
+            onPress={() => void pickVideo()}
+            muted={Boolean(selectedVideo)}
+          />
+          <View
+            style={[
+              styles.fileCard,
+              {
+                backgroundColor: colors.input,
+                borderColor: colors.border,
+                borderRadius: radius.md
+              }
+            ]}
+          >
+            <Ionicons name="film-outline" size={22} color={colors.accent} />
+            <View style={styles.fileMeta}>
+              <Text numberOfLines={1} style={[styles.fileLabel, { color: colors.text }]}>
+                {selectedVideo?.name ?? "Файл пока не выбран"}
+              </Text>
+              <Text style={{ color: colors.textSecondary }}>
+                {selectedVideo?.mimeType ?? "Откроется системный выбор файлов"}
+              </Text>
+            </View>
+          </View>
+          <TextInput
+            value={hashtags}
+            onChangeText={setHashtags}
+            placeholder="travel, дизайн, mood"
+            placeholderTextColor={colors.textSecondary}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.input,
+                color: colors.text,
+                borderColor: colors.border,
+                borderRadius: radius.md
+              }
+            ]}
+          />
+          <PrimaryButton
+            title={uploading ? "Загружаем..." : "Опубликовать"}
+            onPress={() => void submit()}
+          />
         </View>
-        <TextInput
-          value={hashtags}
-          onChangeText={setHashtags}
-          placeholder="хэштег1,хэштег2"
-          placeholderTextColor={colors.textSecondary}
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.surface,
-              color: colors.text,
-              borderColor: colors.border,
-              borderRadius: radius.md
-            }
-          ]}
-        />
-        <PrimaryButton
-          title={uploading ? "Загружаем..." : "Опубликовать"}
-          onPress={() => void submit()}
-        />
       </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  header: {
+    gap: 7
+  },
+  eyebrow: {
+    fontSize: 12,
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 0
+  },
   heading: {
-    fontSize: 30,
-    fontWeight: "800"
+    fontSize: 32,
+    fontWeight: "900",
+    letterSpacing: 0
+  },
+  copy: {
+    fontSize: 16,
+    lineHeight: 23
+  },
+  panel: {
+    borderWidth: 1,
+    padding: 16,
+    gap: 14
   },
   input: {
     borderWidth: 1,
     paddingHorizontal: 16,
-    paddingVertical: 14
+    paddingVertical: 14,
+    fontSize: 16
+  },
+  textarea: {
+    minHeight: 92,
+    textAlignVertical: "top"
   },
   fileCard: {
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    gap: 6
+    gap: 12
+  },
+  fileMeta: {
+    flex: 1,
+    gap: 4
   },
   fileLabel: {
     fontSize: 16,
-    fontWeight: "700"
+    fontWeight: "800"
   }
 });

@@ -1,5 +1,26 @@
 # ShortFlow Plan
 
+## M7. Premium dark-gold mobile redesign `[x]`
+### Goal
+- Redesign the Expo mobile interface into a premium minimal dark experience inspired by Apple/OpenAI: graphite background, muted deep-gold accents, airy typography, frosted surfaces, restrained motion, and a more harmonious feed metadata block.
+
+### Tasks
+- [x] Rework theme tokens around graphite surfaces, matte gold accents, subtle borders, glow, and glass colors.
+- [x] Update shared `Screen`, `PrimaryButton`, splash, skeleton, and bottom navigation styling.
+- [x] Redesign feed video cards so title, description, author, tags, and actions sit in a cleaner visual hierarchy.
+- [x] Align auth, search, upload, notifications, and profile screens with the same premium system.
+- [x] Replace broken visible Russian UI strings in touched mobile screens.
+- [x] Run mobile lint and typecheck.
+
+### Validation
+```sh
+npm run lint --workspace @shortflow/mobile
+npm run typecheck --workspace @shortflow/mobile
+```
+
+### Remaining Risk
+- Visual QA still needs emulator/device or Expo web preview for real viewport inspection.
+
 ## Source
 - Task: разработать production-ready MVP ShortFlow по `tech.md` и исходному плану, затем добавить profanity-only AI-модерацию без отдельного moderation сервиса.
 - Canonical input: `C:\develop\shortflow\tech.md`

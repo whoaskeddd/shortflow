@@ -1,13 +1,13 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { DefaultTheme, NavigationContainer } from "@react-navigation/native";
+import { DarkTheme, NavigationContainer } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { LoadingSplash } from "@/components/LoadingSplash";
-import { NotificationsScreen } from "@/screens/NotificationsScreen";
 import { FeedScreen } from "@/screens/FeedScreen";
 import { LoginScreen } from "@/screens/LoginScreen";
+import { NotificationsScreen } from "@/screens/NotificationsScreen";
 import { ProfileScreen } from "@/screens/ProfileScreen";
 import { RegisterScreen } from "@/screens/RegisterScreen";
 import { SearchScreen } from "@/screens/SearchScreen";
@@ -56,9 +56,9 @@ export function RootNavigator() {
   return (
     <NavigationContainer
       theme={{
-        ...DefaultTheme,
+        ...DarkTheme,
         colors: {
-          ...DefaultTheme.colors,
+          ...DarkTheme.colors,
           background: colors.background,
           card: colors.surface,
           primary: colors.primary,
@@ -72,24 +72,29 @@ export function RootNavigator() {
         screenOptions={({ route }) => ({
           headerShown: false,
           tabBarStyle: {
-            backgroundColor: colors.surface,
+            backgroundColor: colors.surfaceGlass,
             borderTopColor: colors.border,
             borderTopWidth: 1,
             position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: tabBarHeight,
+            left: 12,
+            right: 12,
+            bottom: Math.max(insets.bottom, 8),
+            height: tabBarHeight - Math.max(insets.bottom, 8) + 10,
             paddingTop: 8,
-            paddingBottom: Math.max(insets.bottom, 8),
-            elevation: 0
+            paddingBottom: 8,
+            borderRadius: 26,
+            elevation: 0,
+            shadowColor: "#000000",
+            shadowOpacity: 0.28,
+            shadowRadius: 18,
+            shadowOffset: { width: 0, height: 10 }
           },
-          tabBarActiveTintColor: colors.primary,
+          tabBarActiveTintColor: colors.accent,
           tabBarInactiveTintColor: colors.textSecondary,
           tabBarLabelStyle: {
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: "700",
-            marginTop: 2
+            marginTop: 1
           },
           tabBarIcon: ({ color, focused, size }) => {
             const iconNames =
@@ -97,7 +102,7 @@ export function RootNavigator() {
             return (
               <Ionicons
                 name={focused ? iconNames.active : iconNames.inactive}
-                size={size}
+                size={focused ? size + 1 : size}
                 color={color}
               />
             );

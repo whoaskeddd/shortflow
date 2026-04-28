@@ -1,5 +1,11 @@
 # ShortFlow Status
 
+## 2026-04-28 Premium Redesign Update
+- Current phase: M7 complete, visual QA pending.
+- Done: premium dark-gold mobile redesign across theme tokens, shared primitives, splash/skeleton, bottom tabs, feed card metadata/actions, auth, search, upload, notifications, and profile.
+- Validation passed: `npm run lint --workspace @shortflow/mobile`; `npm run typecheck --workspace @shortflow/mobile`.
+- Next: open Expo preview and inspect feed metadata, tab bar, modals, and forms on mobile-sized and web-sized viewports.
+
 ## Snapshot
 - Current phase: M4-M5. DX optimization and launch handoff
 - Plan file: `C:\develop\shortflow\plan.md`
