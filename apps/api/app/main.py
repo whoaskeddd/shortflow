@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session, joinedload
 from app.config import get_settings
 from app.db import Base, engine, get_db
 from app.deps import get_current_user
+from app.moderation import ModerationBackendUnavailableError, ModerationError
+from app.moderation.service import get_moderation_service
 from app.models import Comment, ContentStatus, Follow, Notification, NotificationType, User, Video, VideoReaction
 from app.schemas import (
     CommentCreateRequest,
@@ -24,7 +26,7 @@ from app.schemas import (
     serialize_video_tags,
 )
 from app.security import create_token, decode_token, hash_password, verify_password
-from app.storage import get_storage
+from app.storage import delete_local_upload, get_storage
 
 
 settings = get_settings()
@@ -91,6 +93,25 @@ def create_notification(
             message=message,
         )
     )
+
+
+def raise_moderation_http_error(error: ModerationError) -> None:
+    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=error.to_detail())
+
+
+def get_public_video_query(video_id: int):
+    return (
+        select(Video)
+        .options(joinedload(Video.author))
+        .where(Video.id == video_id, Video.content_status == ContentStatus.approved)
+    )
+
+
+def get_public_video_or_404(video_id: int, db: Session) -> Video:
+    video = db.scalar(get_public_video_query(video_id))
+    if not video:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
+    return video
 
 
 @app.get("/health")
@@ -174,6 +195,19 @@ def create_video(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> VideoOut:
+    moderation = get_moderation_service()
+
+    try:
+        moderation.assert_text_allowed("title", payload.title)
+        moderation.assert_text_allowed("description", payload.description)
+        moderation.assert_hashtags_allowed(payload.hashtags)
+        moderation.assert_video_allowed(payload.video_url)
+    except ModerationError as error:
+        delete_local_upload(payload.video_url)
+        raise_moderation_http_error(error)
+    except ModerationBackendUnavailableError as error:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(error)) from error
+
     video = Video(
         author_id=current_user.id,
         title=payload.title,
@@ -193,9 +227,7 @@ def create_video(
 
 @app.get("/videos/{video_id:int}", response_model=VideoOut)
 def get_video(video_id: int, db: Session = Depends(get_db)) -> VideoOut:
-    video = db.scalar(select(Video).options(joinedload(Video.author)).where(Video.id == video_id))
-    if not video:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
+    video = get_public_video_or_404(video_id, db)
     video.views_count += 1
     db.add(video)
     db.commit()
@@ -225,7 +257,7 @@ def get_following_feed(
         select(Video)
         .join(Follow, Follow.following_id == Video.author_id)
         .options(joinedload(Video.author))
-        .where(Follow.follower_id == current_user.id)
+        .where(Follow.follower_id == current_user.id, Video.content_status == ContentStatus.approved)
         .order_by(desc(Video.created_at))
         .limit(limit)
     )
@@ -241,9 +273,7 @@ def toggle_reaction(
     notification_type: NotificationType | None,
     message_verb: str,
 ) -> dict[str, bool]:
-    video = db.get(Video, video_id)
-    if not video:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
+    video = get_public_video_or_404(video_id, db)
     reaction = db.scalar(
         select(VideoReaction).where(
             VideoReaction.user_id == current_user.id,
@@ -297,7 +327,12 @@ def repost_video(
 
 @app.get("/videos/{video_id:int}/comments", response_model=list[CommentOut])
 def get_comments(video_id: int, db: Session = Depends(get_db)) -> list[CommentOut]:
-    comments = db.scalars(select(Comment).where(Comment.video_id == video_id).order_by(Comment.created_at)).all()
+    get_public_video_or_404(video_id, db)
+    comments = db.scalars(
+        select(Comment)
+        .where(Comment.video_id == video_id, Comment.content_status == ContentStatus.approved)
+        .order_by(Comment.created_at)
+    ).all()
     return [CommentOut.model_validate(comment) for comment in comments]
 
 
@@ -308,9 +343,13 @@ def create_comment(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> CommentOut:
-    video = db.get(Video, video_id)
-    if not video:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
+    video = get_public_video_or_404(video_id, db)
+
+    try:
+        get_moderation_service().assert_text_allowed("comment", payload.body)
+    except ModerationError as error:
+        raise_moderation_http_error(error)
+
     comment = Comment(
         video_id=video_id,
         author_id=current_user.id,
@@ -411,6 +450,7 @@ def search(q: str = Query(..., min_length=1), db: Session = Depends(get_db)) -> 
             select(Video)
             .options(joinedload(Video.author))
             .where(
+                Video.content_status == ContentStatus.approved,
                 or_(
                     func.lower(Video.title).like(like_pattern),
                     func.lower(Video.description).like(like_pattern),

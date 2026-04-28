@@ -17,19 +17,20 @@ ShortFlow — mobile-first MVP приложения коротких верти�
 
 - регистрация и вход
 - профиль пользователя
-- публикация ролика по URL
+- локальная публикация ролика с AI-проверкой аудио
 - лента `Для вас`
 - лента `Подписки`
 - лайки, сохранения, репосты
 - комментарии
 - поиск
 - активность / уведомления
+- profanity-only AI-модерация для title, description, hashtags, comments и аудиодорожки видео
+  на базе русской модели токсичности с использованием только сигнала `obscenity`
 - splash screen и skeleton loading
 - mobile UI на русском языке
 
 ## Что пока не входит
 
-- AI-модерация
 - direct messages
 - live streaming
 - duet / stitch
@@ -76,6 +77,25 @@ docker compose up --build
 
 ```json
 {"status":"ok"}
+```
+
+Что важно для AI-модерации:
+
+- `apps/api/Dockerfile` уже устанавливает `ffmpeg`, он нужен для извлечения аудио из видео.
+- Backend читает настройки из `apps/api/.env.example`, AI-модерация там включена по умолчанию.
+- При первом реальном moderation-запросе backend скачает `faster-whisper` и `cointegrated/rubert-tiny-toxicity` в локальный кэш.
+- Первая проверка видео или текста может быть медленнее обычного из-за первичной загрузки моделей.
+
+Ключевые env-переменные AI-модерации:
+
+```powershell
+APP_MODERATION_ENABLED=true
+APP_MODERATION_LANGUAGE=ru
+APP_MODERATION_WHISPER_MODEL=base
+APP_MODERATION_MAX_VIDEO_SECONDS=180
+APP_MODERATION_TEXT_MODEL_ID=cointegrated/rubert-tiny-toxicity
+APP_MODERATION_TEXT_MODEL_REVISION=fd5e387
+APP_MODERATION_OBSCENITY_THRESHOLD=0.5
 ```
 
 ### 3. Подготовить Android Studio
@@ -135,7 +155,9 @@ npx expo run:android
 7. После публикации ролик появляется в ленте
 8. Кнопка лайка пульсирует и счетчик меняется плавно
 9. Можно открыть комментарии и отправить комментарий
-10. Работают вкладки `Поиск`, `Активность`, `Профиль`
+10. Мат в title/comment отклоняется понятной ошибкой
+11. Мат в аудиодорожке видео не дает опубликовать ролик
+12. Работают вкладки `Поиск`, `Активность`, `Профиль`
 
 ## Полезные команды
 
@@ -143,6 +165,7 @@ npx expo run:android
 
 ```powershell
 npm run validate
+docker compose up --build
 ```
 
 Из `apps/mobile`:
@@ -157,9 +180,13 @@ npx expo run:android
 Из `apps/api` при локальной Python-проверке:
 
 ```powershell
+pip install -e .[dev]
+uvicorn app.main:app --host 0.0.0.0 --port 8000
 pytest tests
 python -m ruff check app tests
 ```
+
+Если запускаете backend не через Docker, установите `ffmpeg` отдельно в систему, иначе модерация видео не сможет извлечь аудио.
 
 ## Примечания
 

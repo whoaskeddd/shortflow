@@ -22,6 +22,13 @@ class Settings(BaseSettings):
     s3_access_key: str | None = None
     s3_secret_key: str | None = None
     s3_bucket: str = "shortflow"
+    moderation_enabled: bool = True
+    moderation_language: str = "ru"
+    moderation_whisper_model: str = "base"
+    moderation_max_video_seconds: int = 180
+    moderation_text_model_id: str = "cointegrated/rubert-tiny-toxicity"
+    moderation_text_model_revision: str = "fd5e387"
+    moderation_obscenity_threshold: float = 0.5
 
 
 @lru_cache

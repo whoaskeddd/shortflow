@@ -137,9 +137,13 @@ export async function apiRequest<T>(
     let message = rawMessage;
 
     try {
-      const parsed = JSON.parse(rawMessage) as { detail?: string };
-      if (parsed.detail) {
+      const parsed = JSON.parse(rawMessage) as {
+        detail?: string | { code?: string; field?: string; message?: string };
+      };
+      if (typeof parsed.detail === "string" && parsed.detail) {
         message = parsed.detail;
+      } else if (parsed.detail && typeof parsed.detail.message === "string") {
+        message = parsed.detail.message;
       }
     } catch {
       // Keep the raw response body when it isn't JSON.

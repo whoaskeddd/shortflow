@@ -1,13 +1,13 @@
 # ShortFlow Plan
 
 ## Source
-- Task: разработать production-ready MVP ShortFlow по `tech.md` и исходному плану, исключив AI-модерацию до отдельного этапа.
+- Task: разработать production-ready MVP ShortFlow по `tech.md` и исходному плану, затем добавить profanity-only AI-модерацию без отдельного moderation сервиса.
 - Canonical input: `C:\develop\shortflow\tech.md`
 - Repo context: новый монорепозиторий `backend + mobile + infra`
 - Last updated: 2026-04-27
 
 ## Assumptions
-- AI-модерация и очередь ручной модерации откладываются, но доменная модель допускает их добавление позже без ломающих миграций.
+- Для текущего этапа достаточно profanity-only AI-модерации без очереди ручного ревью.
 - Для MVP допустим общий монорепозиторий с `apps/api` и `apps/mobile`.
 - Backend должен быть готов к PostgreSQL/Redis/S3, но локально поддерживать упрощенный запуск через Docker Compose.
 - Mobile-часть будет собрана на Expo + React Native + TypeScript для ускоренного iOS/Android MVP.
@@ -25,7 +25,7 @@
 | ID | Title | Depends on | Status |
 | --- | --- | --- | --- |
 | M1 | Durable planning and repo foundation | - | [x] |
-| M2 | FastAPI backend MVP without AI moderation | M1 | [~] |
+| M2 | FastAPI backend MVP with profanity moderation | M1 | [~] |
 | M3 | React Native mobile MVP | M1 | [x] |
 | M4 | Shared infrastructure and developer experience | M2, M3 | [x] |
 | M5 | Validation, docs, and handoff | M2, M3, M4 | [~] |
@@ -78,21 +78,21 @@ Get-ChildItem apps
 ### Stop-and-Fix Rule
 - Если структура репозитория или execution docs не согласованы между собой, сначала выровнять документы и только потом продолжать код.
 
-## M2. FastAPI backend MVP without AI moderation `[~]`
+## M2. FastAPI backend MVP with profanity moderation `[~]`
 ### Goal
-- Поднять backend API для auth, profiles, videos, feeds, follows, likes, saves, reposts, comments, search, notifications и базовой admin-ready модели moderation status без AI pipeline.
+- Поднять backend API для auth, profiles, videos, feeds, follows, likes, saves, reposts, comments, search, notifications и profanity-only AI moderation для текста и видео.
 
 ### Tasks
 - [x] Настроить Python-проект, конфиг, зависимости и env-шаблоны.
 - [x] Реализовать SQLAlchemy модели и связи домена.
 - [x] Реализовать auth с access/refresh JWT и hash паролей.
-- [x] Реализовать REST endpoints из MVP-объема без AI moderation endpoints.
+- [x] Реализовать REST endpoints из MVP-объема и связать их с profanity-only moderation checks.
 - [x] Реализовать storage abstraction для локального файла и S3-ready конфигурации.
 - [~] Добавить тесты на ключевые сценарии auth/feed/social graph.
 
 ### Definition of Done
 - API покрывает основной MVP-объем backend.
-- Сущности и схемы допускают позднее подключение AI moderation без breaking changes.
+- Сущности и схемы поддерживают текущую profanity moderation и допускают позднее подключение ручного review без breaking changes.
 - Есть инструкция локального запуска через Docker Compose.
 
 ### Validation
@@ -167,7 +167,7 @@ npm run validate
 ### Tasks
 - [~] Прогнать доступные локальные проверки.
 - [x] Обновить `status.md` и `test-plan.md` фактическими результатами.
-- [x] Зафиксировать open risks и post-MVP этап подключения AI moderation.
+- [x] Зафиксировать open risks и post-MVP этап расширения moderation.
 
 ### Definition of Done
 - Есть прозрачная картина: что реализовано, что проверено, что осталось на следующий проход.

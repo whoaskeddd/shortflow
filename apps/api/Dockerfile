@@ -4,6 +4,10 @@ WORKDIR /app
 
 COPY apps/api /app
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -e .[dev]
 
 RUN mkdir -p /app/data/uploads

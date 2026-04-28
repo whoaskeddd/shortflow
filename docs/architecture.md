@@ -11,7 +11,8 @@
 - FastAPI app with modular routers and SQLAlchemy models.
 - Stateless JWT access/refresh tokens.
 - Local file upload adapter now, S3-ready settings included for future swap.
-- Manual moderation-ready `content_status` field already exists on publishable entities.
+- Profanity-only moderation is enforced on text fields and video audio before publish.
+- Public read paths expose only `approved` videos/comments.
 
 ## Mobile design
 
@@ -20,13 +21,9 @@
 - Theme tokens shared through a small design system layer.
 - Feed UI optimized for vertical full-screen browsing.
 
-## Deferred AI moderation insertion point
+## AI moderation flow
 
-Later AI moderation can hook into:
-
-- `Video.content_status`
-- `Comment.content_status`
-- `Notification` fan-out for review results
-- admin routes for queue/review actions
-
-No existing public contract needs to be broken to add the moderation workflow later.
+- Text moderation uses the Russian model `cointegrated/rubert-tiny-toxicity` and blocks only by its `obscenity` score for `title`, `description`, `hashtags`, and comments.
+- Video moderation extracts audio with `ffmpeg`, transcribes it with `faster-whisper`, and reuses the same text classifier on the transcript.
+- Rejected publish attempts do not create DB records; local uploads are removed on moderation failure.
+- Existing `content_status` and admin routes remain the insertion point for any later manual review workflow.
