@@ -8,6 +8,8 @@ export type ApiUser = {
   full_name: string;
   bio: string;
   avatar_url: string | null;
+  is_active?: boolean;
+  created_at?: string;
 };
 
 export type ApiVideo = {
@@ -142,7 +144,11 @@ export async function apiRequest<T>(
       };
       if (typeof parsed.detail === "string" && parsed.detail) {
         message = parsed.detail;
-      } else if (parsed.detail && typeof parsed.detail.message === "string") {
+      } else if (
+        parsed.detail &&
+        typeof parsed.detail !== "string" &&
+        typeof parsed.detail.message === "string"
+      ) {
         message = parsed.detail.message;
       }
     } catch {
@@ -157,4 +163,16 @@ export async function apiRequest<T>(
   }
 
   return response.json() as Promise<T>;
+}
+
+export function fetchMyVideos(token: string) {
+  return apiRequest<ApiVideo[]>("/users/me/videos", {}, token);
+}
+
+export function deleteOwnVideo(videoId: number, token: string) {
+  return apiRequest<void>(`/videos/${videoId}`, { method: "DELETE" }, token);
+}
+
+export function fetchNotifications(token: string) {
+  return apiRequest<ApiNotification[]>("/notifications", {}, token);
 }

@@ -4,6 +4,7 @@ from typing import Any
 
 from app.config import Settings
 from app.moderation.errors import ModerationBackendUnavailableError
+from app.moderation.normalize import normalize_text
 
 
 class ModelTextModerator:
@@ -14,7 +15,7 @@ class ModelTextModerator:
         self._obscenity_index: int | None = None
 
     def normalize_text(self, text: str) -> str:
-        return " ".join(text.strip().split())
+        return normalize_text(text)
 
     def is_profane(self, text: str) -> bool:
         return self.get_obscenity_score(text) >= self.settings.moderation_obscenity_threshold

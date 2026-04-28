@@ -35,15 +35,22 @@ class WhisperVideoModerator:
             if not audio_path.exists() or audio_path.stat().st_size == 0:
                 return ""
 
-            model = self.get_model()
-            segments, _info = model.transcribe(
-                str(audio_path),
-                language=self.settings.moderation_language,
-                beam_size=1,
-                vad_filter=True,
-                condition_on_previous_text=False,
-            )
-            return " ".join(segment.text.strip() for segment in segments if segment.text.strip())
+            transcript = self._transcribe_audio(audio_path, vad_filter=True)
+            if transcript:
+                return transcript
+
+            return self._transcribe_audio(audio_path, vad_filter=False)
+
+    def _transcribe_audio(self, audio_path: Path, *, vad_filter: bool) -> str:
+        model = self.get_model()
+        segments, _info = model.transcribe(
+            str(audio_path),
+            language=self.settings.moderation_language,
+            beam_size=1,
+            vad_filter=vad_filter,
+            condition_on_previous_text=False,
+        )
+        return " ".join(segment.text.strip() for segment in segments if segment.text.strip())
 
     def get_model(self):
         if self._model is not None:

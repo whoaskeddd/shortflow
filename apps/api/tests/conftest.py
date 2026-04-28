@@ -19,6 +19,7 @@ os.environ["APP_MODERATION_ENABLED"] = "true"
 os.environ["APP_MODERATION_LANGUAGE"] = "ru"
 os.environ["APP_MODERATION_WHISPER_MODEL"] = "base"
 os.environ["APP_MODERATION_MAX_VIDEO_SECONDS"] = "180"
+os.environ["APP_MODERATION_BLOCKLIST"] = "пиздец,блядь,блять,хуйня,хуй,ебать,ебан"
 
 from app.config import get_settings
 from app.db import Base, SessionLocal, engine

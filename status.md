@@ -51,8 +51,5 @@ npm run validate
 | 2026-04-26 | M2-M4 | `apps/api`, `apps/mobile`, `docker-compose.yml`, `README.md` | `npm install`, `npm run lint --workspace @shortflow/mobile`, `npm run typecheck --workspace @shortflow/mobile`, `npm run validate` | mobile pass / backend pending | разблокировать Python и прогнать backend checks |
 | 2026-04-28 | M2-M5 | `apps/api/app/moderation`, `apps/api/tests`, `apps/mobile/src/api/client.ts`, `README.md` | `python3 --version`, `python3 -m compileall apps/api/app apps/api/tests`, `python3 -m pytest apps/api/tests`, `npm run typecheck --workspace @shortflow/mobile` | compile pass / pytest missing / tsc missing | установить dev-зависимости и прогнать полный validation |
 
-## Smoke / Demo Checklist
-- [ ] Backend API поднимается локально
-- [ ] Backend moderation rejects profanity in text/video with expected `422`
-- [ ] Mobile app typecheck/lint проходят в текущем окружении
+## Smoke / Demo Checklist/ущем окружении
 - [x] Core auth/feed/profile flow покрыт кодом и документацией

@@ -1,7 +1,7 @@
 from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import case, desc, func, or_, select
+from sqlalchemy import case, delete, desc, func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.config import get_settings
@@ -82,8 +82,6 @@ def video_to_schema(video: Video) -> VideoOut:
 def create_notification(
     db: Session, user_id: int, actor_id: int, notif_type: NotificationType, entity_id: int | None, message: str
 ) -> None:
-    if user_id == actor_id:
-        return
     db.add(
         Notification(
             user_id=user_id,
@@ -160,6 +158,20 @@ def get_me(current_user: User = Depends(get_current_user)) -> UserOut:
     return UserOut.model_validate(current_user)
 
 
+@app.get("/users/me/videos", response_model=list[VideoOut])
+def get_my_videos(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[VideoOut]:
+    videos = db.scalars(
+        select(Video)
+        .options(joinedload(Video.author))
+        .where(Video.author_id == current_user.id)
+        .order_by(desc(Video.created_at))
+    ).unique().all()
+    return [video_to_schema(video) for video in videos]
+
+
 @app.patch("/users/me", response_model=UserOut)
 def update_me(
     payload: ProfileUpdateRequest,
@@ -223,6 +235,32 @@ def create_video(
     db.refresh(video)
     video.author = current_user
     return video_to_schema(video)
+
+
+@app.delete("/videos/{video_id:int}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_video(
+    video_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    video = db.scalar(select(Video).options(joinedload(Video.author)).where(Video.id == video_id))
+    if not video:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found")
+    if video.author_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot delete another user's video")
+
+    db.execute(delete(Comment).where(Comment.video_id == video_id))
+    db.execute(delete(VideoReaction).where(VideoReaction.video_id == video_id))
+    db.execute(
+        delete(Notification).where(
+            Notification.entity_id == video_id,
+            Notification.type.in_([NotificationType.like, NotificationType.comment, NotificationType.repost]),
+        )
+    )
+    delete_local_upload(video.video_url)
+    db.delete(video)
+    db.commit()
+    return None
 
 
 @app.get("/videos/{video_id:int}", response_model=VideoOut)

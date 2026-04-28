@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     moderation_text_model_id: str = "cointegrated/rubert-tiny-toxicity"
     moderation_text_model_revision: str = "fd5e387"
     moderation_obscenity_threshold: float = 0.5
+    moderation_blocklist: str = "пиздец,хуйня,хуй,ебать,ебан"
 
 
 @lru_cache

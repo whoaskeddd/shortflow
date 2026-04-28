@@ -4,6 +4,7 @@ from functools import lru_cache
 
 from app.config import Settings, get_settings
 from app.moderation.errors import ModerationError
+from app.moderation.normalize import compact_text, normalize_text
 from app.moderation.text import ModelTextModerator
 from app.moderation.video import WhisperVideoModerator
 from app.storage import resolve_local_upload_path
@@ -15,6 +16,19 @@ FIELD_MESSAGES = {
     "comment": "Комментарий содержит нецензурную брань.",
     "video": "Видео содержит нецензурную брань в аудиодорожке.",
 }
+
+DEFAULT_BLOCKLIST_TERMS = (
+    "бляд",
+    "блят",
+    "пизд",
+    "хуй",
+    "хуйн",
+    "ебат",
+    "ебан",
+    "ебуч",
+    "нахуй",
+    "охуе",
+)
 
 
 class ModerationService:
@@ -28,12 +42,34 @@ class ModerationService:
         self.settings = settings
         self.text_moderator = text_moderator or ModelTextModerator(settings)
         self.video_moderator = video_moderator or WhisperVideoModerator(settings)
+        self.blocked_terms = self._build_blocklist(settings.moderation_blocklist)
+
+    @staticmethod
+    def _build_blocklist(raw_blocklist: str) -> tuple[str, ...]:
+        merged_terms = [*DEFAULT_BLOCKLIST_TERMS, *raw_blocklist.split(",")]
+        unique_terms: list[str] = []
+
+        for term in (normalize_text(item) for item in merged_terms):
+            if term and term not in unique_terms:
+                unique_terms.append(term)
+
+        return tuple(unique_terms)
+
+    def contains_blocked_term(self, text: str) -> bool:
+        normalized = normalize_text(text)
+        compact = compact_text(text)
+
+        for term in self.blocked_terms:
+            compact_term = compact_text(term)
+            if term in normalized or (compact_term and compact_term in compact):
+                return True
+        return False
 
     def assert_text_allowed(self, field: str, text: str) -> None:
         if not self.settings.moderation_enabled or not text.strip():
             return
 
-        if self.text_moderator.is_profane(text):
+        if self.contains_blocked_term(text) or self.text_moderator.is_profane(text):
             raise ModerationError(
                 code="PROFANITY_DETECTED",
                 field=field,
@@ -61,7 +97,7 @@ class ModerationService:
         self.video_moderator.assert_duration_allowed(video_path)
         transcript = self.video_moderator.transcribe(video_path)
 
-        if transcript and self.text_moderator.is_profane(transcript):
+        if transcript and (self.contains_blocked_term(transcript) or self.text_moderator.is_profane(transcript)):
             raise ModerationError(
                 code="PROFANITY_DETECTED",
                 field="video",
