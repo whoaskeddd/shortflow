@@ -81,7 +81,7 @@ export function UploadScreen() {
       setDescription("");
       setHashtags("");
       setSelectedVideo(null);
-      Alert.alert("Ролик опубликован", "Видео загружено и появится сверху в ленте.");
+      Alert.alert("Ролик опубликован", "Видео прошло проверку и уже доступно в ленте.");
     } catch (error) {
       Alert.alert(
         "Ошибка публикации",

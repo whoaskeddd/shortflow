@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
-from urllib.parse import urlparse
 
 from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session
 
 from app.config import Settings, get_settings
 from app.models import Comment, Notification, NotificationType, User, Video, VideoReaction
+from app.storage import resolve_local_upload_path
 
 TEST_EMAILS = {"demo@shortflow.app", "creator@shortflow.app"}
 TEST_TITLES = {"Morning city run"}
@@ -45,20 +44,6 @@ def get_test_video_query():
             )
         )
     )
-
-
-def resolve_local_upload_path(video_url: str, settings: Settings) -> Path | None:
-    public_base_url = settings.storage_public_base_url.rstrip("/")
-    if not video_url.startswith(public_base_url):
-        return None
-
-    parsed = urlparse(video_url)
-    filename = Path(parsed.path).name
-    if not filename:
-        return None
-
-    return Path(settings.storage_local_path) / filename
-
 
 def cleanup_test_videos(
     db: Session,
