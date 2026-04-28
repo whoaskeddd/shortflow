@@ -145,6 +145,8 @@ npm run lint --workspace @shortflow/mobile
 - [x] Добавить root workspace scripts для lint/typecheck/validate.
 - [x] Добавить GitHub Actions для backend и mobile.
 - [x] Подготовить `README.md` и архитектурную документацию.
+- [x] Оптимизировать Docker-контекст backend-сборки, чтобы не тянуть в образ корневой `node_modules`, `.venv` и кэши.
+- [x] Документировать hybrid/local launch без полной Docker-сборки.
 
 ### Definition of Done
 - Новый разработчик может понять структуру проекта и поднять окружение без чтения чата.

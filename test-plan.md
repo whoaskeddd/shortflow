@@ -8,7 +8,7 @@
 - Last updated: 2026-04-28
 
 ## Validation Scope
-- In scope: backend auth/profile/video/feed/social/search/notification flows, profanity-only moderation for text and video audio, approved-only public visibility rules, mobile navigation/state/UI contracts, local video picker/upload flow, DX/infra docs and compose.
+- In scope: backend auth/profile/video/feed/social/search/notification flows, profanity-only moderation for text and video audio, approved-only public visibility rules, mobile navigation/state/UI contracts, local video picker/upload flow, DX/infra docs and compose, optimized Docker build context and local/hybrid launch docs.
 - Out of scope: manual review queue, multilingual moderation beyond Russian, live streaming, direct messages, duet/stitch, monetization, advanced ML ranking.
 
 ## Environment / Fixtures
@@ -47,6 +47,7 @@
 - Comment deletion by non-owner.
 
 ## Acceptance Gates
+- [ ] `docker compose config`
 - [ ] `python -m ruff check apps/api`
 - [ ] `pytest apps/api/tests`
 - [ ] `npm run lint --workspace @shortflow/mobile`
@@ -61,6 +62,7 @@
 
 ## Command Matrix
 ```sh
+docker compose config
 python -m ruff check apps/api
 pytest apps/api/tests
 npm run lint --workspace @shortflow/mobile

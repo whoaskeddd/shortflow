@@ -69,6 +69,18 @@ docker compose down -v
 docker compose up --build
 ```
 
+Быстрее для повторных запусков:
+
+```powershell
+docker compose up --build api
+```
+
+Что оптимизировано:
+
+- backend теперь собирается из контекста `apps/api`, а не из корня репозитория;
+- в сборку больше не попадают корневой `node_modules`, локальная `.venv`, кэши и тестовые артефакты;
+- в dev-контейнер монтируются только `apps/api/app` и `apps/api/data`, поэтому Docker меньше синхронизирует файлов.
+
 После запуска проверьте:
 
 - `http://127.0.0.1:8000/health`
@@ -165,7 +177,9 @@ npx expo run:android
 
 ```powershell
 npm run validate
-docker compose up --build
+docker compose config
+docker compose up --build api
+docker compose up -d postgres redis minio
 ```
 
 Из `apps/mobile`:
@@ -185,6 +199,66 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 pytest tests
 python -m ruff check app tests
 ```
+
+## Запуск без Docker
+
+### Вариант 1. Самый легкий: backend полностью локально
+
+Подходит, если не хочется гонять Docker вообще.
+
+1. Установите Python 3.12 и `ffmpeg`.
+2. Перейдите в `C:\develop\shortflow\apps\api`.
+3. Создайте `.env` на основе `.env.example`.
+4. Для легкого режима поменяйте в `.env`:
+
+```powershell
+APP_DATABASE_URL=sqlite:///./shortflow.db
+APP_STORAGE_BACKEND=local
+APP_STORAGE_LOCAL_PATH=./data/uploads
+APP_STORAGE_PUBLIC_BASE_URL=http://127.0.0.1:8000/uploads
+```
+
+5. Установите зависимости и запустите API:
+
+```powershell
+cd C:\develop\shortflow\apps\api
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -e .[dev]
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Плюсы:
+
+- самый легкий по нагрузке режим;
+- не надо каждый раз собирать образ;
+- SQLite уже поддерживается кодом, таблицы создаются на старте.
+
+Ограничения:
+
+- это режим для разработки, не копия production-окружения;
+- если позже понадобится S3/MinIO или отдельный Postgres, их нужно будет вернуть.
+
+### Вариант 2. Hybrid: Docker только для инфраструктуры
+
+Если хочешь оставить Postgres/Redis/MinIO, но не собирать API в Docker:
+
+```powershell
+cd C:\develop\shortflow
+docker compose up -d postgres redis minio
+```
+
+Потом запусти backend локально из `apps/api`, но в `.env` используй хостовые адреса:
+
+```powershell
+APP_DATABASE_URL=postgresql+psycopg://shortflow:shortflow@localhost:5432/shortflow
+APP_REDIS_URL=redis://localhost:6379/0
+APP_S3_ENDPOINT=http://localhost:9000
+APP_STORAGE_BACKEND=local
+```
+
+Если S3 пока не нужен, `APP_STORAGE_BACKEND=local` можно оставить и не зависеть от MinIO даже в hybrid-режиме.
 
 Если запускаете backend не через Docker, установите `ffmpeg` отдельно в систему, иначе модерация видео не сможет извлечь аудио.
 

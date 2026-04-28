@@ -1,13 +1,22 @@
 FROM python:3.12-slim
-WORKDIR /app
 
-COPY apps/api /app
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -e .[dev]
+COPY pyproject.toml /tmp/pyproject.toml
+
+RUN python -m pip install --upgrade pip \
+    && python -c "import subprocess, sys, tomllib; data = tomllib.load(open('/tmp/pyproject.toml', 'rb')); subprocess.check_call([sys.executable, '-m', 'pip', 'install', *data['project']['dependencies']])"
+
+COPY app /app/app
 
 RUN mkdir -p /app/data/uploads
 

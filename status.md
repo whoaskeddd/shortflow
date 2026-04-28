@@ -1,7 +1,7 @@
 # ShortFlow Status
 
 ## Snapshot
-- Current phase: M5. Validation, docs, and profanity moderation handoff
+- Current phase: M4-M5. DX optimization and launch handoff
 - Plan file: `C:\develop\shortflow\plan.md`
 - Status: yellow
 - Last updated: 2026-04-28
@@ -14,12 +14,15 @@
 - Собран mobile MVP на Expo/React Native с auth flow, feed, search, upload, notifications, profile и theme system.
 - Добавлена profanity-only AI-модерация для текста и аудиодорожки видео на backend, плюс approved-only фильтрация публичных read endpoints.
 - Обновлены backend tests под moderation-кейсы и mobile API error parsing.
+- Уменьшен Docker build context для API до `apps/api`, добавлен `.dockerignore`, перенастроен монтаж в dev-режиме только на `app` и `data`.
+- Dockerfile перестроен под кэш слоев: сначала system/runtime dependencies, потом код.
+- README дополнен сценариями быстрого Docker запуска и local/hybrid launch без полной Docker-сборки.
 
 ## In Progress
-- Полный прогон backend/mobile validation после установки Python/Node dev-зависимостей в окружении.
+- Локальная проверка compose-конфига и повторный прогон backend/mobile validation после установки Python/Node dev-зависимостей.
 
 ## Next
-- Установить backend/mobile зависимости и прогнать `python3 -m pytest apps/api/tests`, `python -m ruff check apps/api`, `npm run typecheck --workspace @shortflow/mobile`.
+- Прогнать `docker compose config`, потом при наличии зависимостей повторить `docker compose up --build api`, `python -m pytest apps/api/tests`, `npm run validate`.
 
 ## Decisions Made
 - Mobile стек: Expo + React Native + TypeScript + React Navigation + Zustand.
@@ -36,6 +39,8 @@
 node --version
 npm --version
 python3 --version
+docker compose config
+docker compose up --build api
 python3 -m compileall apps/api/app apps/api/tests
 python3 -m pytest apps/api/tests
 npm run validate

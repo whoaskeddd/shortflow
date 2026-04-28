@@ -35,8 +35,8 @@ services:
 
   api:
     build:
-      context: .
-      dockerfile: apps/api/Dockerfile
+      context: ./apps/api
+      dockerfile: Dockerfile
     env_file:
       - apps/api/.env.example
     ports:
@@ -49,7 +49,8 @@ services:
       minio:
         condition: service_started
     volumes:
-      - ./apps/api:/app
+      - ./apps/api/app:/app/app
+      - ./apps/api/data:/app/data
 
 volumes:
   postgres_data:
