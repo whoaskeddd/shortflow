@@ -1,8 +1,7 @@
 ﻿# ShortFlow
 
-Демо-видео: [shortflowfull.mp4](https://raw.githubusercontent.com/whoaskeddd/portfolio/main/assets/videos/shortflowfull.mp4)
+Демо-видео: [shortflowfull.mp4](https://github.com/whoaskeddd/portfolio/blob/main/assets/videos/shortflowfull.mp4)
 
-![ShortFlow Demo](https://raw.githubusercontent.com/whoaskeddd/portfolio/main/assets/videos/shortflowfull.mp4)
 
 ## О проекте
 ShortFlow — mobile-first приложение коротких видео (React Native + Expo) с backend на FastAPI.
@@ -84,4 +83,5 @@ cd C:\develop\portfolio\repos\shortflow\apps\api
 pytest tests
 python -m ruff check app tests
 ```
+
 
